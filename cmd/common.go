@@ -7,10 +7,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/rpc/client"
+	"io"
 	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/tabwriter"
 )
 
 var (
@@ -176,5 +178,12 @@ func display(v interface{})  {
 		fmt.Println(err)
 	}
 	fmt.Println(string(data))
+}
+
+//display information in table
+func newTabWriter(out io.Writer) *tabwriter.Writer {
+	w := new(tabwriter.Writer)
+	w.Init(out, 0, 0, 4, ' ', 0)
+	return w
 }
 

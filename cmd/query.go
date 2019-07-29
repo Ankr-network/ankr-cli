@@ -16,14 +16,12 @@ limitations under the License.
 package cmd
 
 import (
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/common"
 	core_types "github.com/tendermint/tendermint/rpc/core/types"
-	"github.com/tendermint/tendermint/types"
+	"os"
 	"strings"
 )
 
@@ -45,6 +43,12 @@ var(
 
 	//transaction prefix
      TxPrefix = "trx_send="
+     setMeteringPrefix = "set_mtr="
+     setBalancePrefix = "set_bal="
+     setStakePrefix = "set_stk="
+     setCertPrefix = "set_crt="
+     removeCertPrefix = "rmv_crt="
+     setValidatorPrefix = "val:"
 )
 
 // queryCmd represents the query command
@@ -104,13 +108,10 @@ func transactionInfo(cmd *cobra.Command, args []string)  {
 		fmt.Println(err)
 		return
 	}
-	result := parseSendTx(resp)
-	display(result)
-	//x, _ := new(big.Int).SetString("xxx", 10)
-	//parseSendTx(resp)
-	//time.Unix(x.Int64(),0)
-	//display(resp)
-	//fmt.Println(string(resp.Tx))
+	fmt.Println("testing.....")
+	result := parseTx(resp)
+	displayTx(result)
+	//display(result)
 }
 
 func addTransactionInfoFlags(cmd *cobra.Command)  {
@@ -148,17 +149,7 @@ func queryBlock(cmd *cobra.Command, args []string)  {
 	if resp.Block.Txs == nil || len(resp.Block.Txs) == 0 {
 		fmt.Println("[]")
 	}else {
-		//display(resp.Block.Txs)
-		//txs, err := decodeTxs(resp.Block.Txs)
-		//if err != nil {
-		//	fmt.Println("base64 decode error!")
-		//	return
-		//}else {
-		//	fmt.Println(txs)
-		//}
 		for _, tx := range resp.Block.Txs {
-			fmt.Printf("%x", tx.Hash())
-			//fmt.Println(string(tx.Hash()))
 			fmt.Println(string(tx))
 		}
 	}
@@ -344,21 +335,7 @@ func queryNumUnconfiredTxs(cmd *cobra.Command, args []string)  {
 	display(resp)
 }
 
-func decodeTxs(txs []types.Tx) ([][]byte, error) {
-	decodeTxs := make([][]byte,0, len(txs))
-	for _, tx := range txs{
-		//var dst []byte
-		//_, err := base64.StdEncoding.Decode(dst, tx)
-		base64.StdEncoding.EncodeToString(tx)
-		dst, err :=base64.StdEncoding.DecodeString(string(tx))
-		if err != nil {
-			return decodeTxs, err
-		}
-		decodeTxs = append(decodeTxs, dst)
-	}
-	return decodeTxs, nil
-}
-
+//transaction data structure
 type Transaction struct {
 	Type string
 	Hash string
@@ -369,40 +346,119 @@ type Transaction struct {
 }
 
 
-//send coin transaction
+//transaction data structure used in parsing all kinds of transactions
 type ResultTx struct {
-	Type string
-	Hash     common.HexBytes           `json:"hash"`
-	Height   int64                  `json:"height"`
-	Index    uint32                 `json:"index"`
-	Data interface{} `json:"data"`
+	Type string `json:"type"`
+	Hash     string   `json:"hash"`//common.HexBytes           `json:"hash"`
+	Height   int64                  `json:"height"` //block height
+	Index    uint32                 `json:"index"` //transaction index in block
+	Data map[string] string `json:"data"` //used to store different type of transaction data
 }
 
-
-//transaction send type
-type trxSend struct {
-	From string `json:"from"`
-	To string `json:"to"`
-	Amount string `json:"amount"`
-	Nonce string `json:"nonce"`
+//parse transaction data from rpc response and write to ResultTx
+func (rt *ResultTx)parseSendTx(tx string)  {
+	txString := strings.TrimPrefix(tx, TxPrefix)
+	txSlice := strings.Split(txString, ":")
+	rt.Data["from"] = string(txSlice[0])
+	rt.Data["to"] = string(txSlice[1])
+	rt.Data["amount"] = string(txSlice[2])
+	rt.Data["nonce"] = string(txSlice[3])
 }
 
-func parseSendTx(tx *core_types.ResultTx) ResultTx {
+func (rt *ResultTx)parseSetMeteringTx(tx string)  {
+	txString := strings.TrimPrefix(tx, setMeteringPrefix)
+	txSlice := strings.Split(txString, ":")
+	rt.Data["dc name"] = string(txSlice[0])
+	rt.Data["name space"] = string(txSlice[1])
+	rt.Data["nonce"] = string(txSlice[4])
+	rt.Data["value"] = string(txSlice[5])
+}
+
+func (rt *ResultTx)parseSetBalanceTx(tx string)  {
+	txString := strings.TrimPrefix(tx, setBalancePrefix)
+	txSlice := strings.Split(txString, ":")
+	rt.Data["address"] = string(txSlice[0])
+	rt.Data["amount"] = string(txSlice[1])
+	rt.Data["nonce"] = string(txSlice[2])
+}
+func (rt *ResultTx)parseSetStakeTx(tx string)  {
+	txString := strings.TrimPrefix(tx, setStakePrefix)
+	txSlice := strings.Split(txString, ":")
+	rt.Data["amount"] = string(txSlice[0])
+}
+
+func (rt *ResultTx)parseSetCertTx(tx string)  {
+	txString := strings.TrimPrefix(tx, setCertPrefix)
+	txSlice := strings.Split(txString, ":")
+	rt.Data["dc name"] = string(txSlice[0])
+	rt.Data["cert perm"] = string(txSlice[1])
+}
+
+func (rt *ResultTx)parseRemoveCertTx(tx string)  {
+	txString := strings.TrimPrefix(tx, removeCertPrefix)
+	txSlice := strings.Split(txString, ":")
+	rt.Data["dc name"] = string(txSlice[0])
+}
+
+func (rt *ResultTx)parseSetValidatorTx(tx string)  {
+	txString := strings.TrimPrefix(tx, setValidatorPrefix)
+	txSlice := strings.Split(txString, ":")
+	rt.Data["public key"] = string(txSlice[0])
+	rt.Data["power"] = string(txSlice[1])
+}
+
+//parse transaction into ResultTx struct
+func parseTx(tx *core_types.ResultTx) ResultTx {
 	var result ResultTx
-	result.Hash = tx.Hash
+	result.Data = make(map[string]string)
+	result.Hash = fmt.Sprintf("0x%x",tx.Hash)
 	result.Height = tx.Height
 	result.Index = tx.Index
 	txString := string(tx.Tx)
 	if strings.HasPrefix(txString, TxPrefix) {
-		result.Type = TxPrefix
-		var trx trxSend
-		txString = strings.TrimPrefix(txString, TxPrefix)
-		txSlice := strings.Split(txString, ":")
-		trx.From = string(txSlice[0])
-		trx.To = string(txSlice[1])
-		trx.Amount = string(txSlice[2])
-		trx.Nonce = string(txSlice[3])
-		result.Data = trx
+		result.Type = "transfer"
+		result.parseSendTx(txString)
+		return  result
+	}else if strings.HasPrefix(txString, setMeteringPrefix) {
+		result.Type = "set metering"
+		result.parseSetMeteringTx(txString)
+		return result
+	}else if strings.HasPrefix(txString, setBalancePrefix) {
+		result.Type = "set balance"
+		result.parseSetBalanceTx(txString)
+		return result
+	}else if strings.HasPrefix(txString, setStakePrefix) {
+		result.Type = "set stake"
+		result.parseSetStakeTx(txString)
+		return result
+	}else if strings.HasPrefix(txString, setCertPrefix) {
+		result.Type = "set cert"
+		result.parseSetCertTx(txString)
+		return result
+	}else if strings.HasPrefix(txString, removeCertPrefix) {
+		result.Type = "remove cert"
+		result.parseRemoveCertTx(txString)
+		return result
+	}else if strings.HasPrefix(txString, setValidatorPrefix) {
+		result.Type = "set validator"
+		result.parseSetValidatorTx(txString)
+		return result
+	}else {
+		fmt.Println("Can not parse Transaction data:", string(tx.Tx))
+		return result
 	}
-	return result
+}
+
+//display transaction information
+func displayTx(rt ResultTx)  {
+	w := newTabWriter(os.Stdout)
+	fmt.Fprintf(w, "tx type\thash\tblock height\tblock index\tdetail\n")
+	fmt.Fprintf(w, "%s\t%s\t%d\t%d\t", rt.Type, rt.Hash, rt.Height, rt.Index)
+	switch rt.Type {
+	case "transfer":
+		fmt.Fprintf(w, "from: %s\tto:%s\tamount:%s\tnonce:%s\n:",rt.Data["from"],rt.Data["to"],rt.Data["amount"],rt.Data["nonce"])
+	case "":
+		fmt.Fprintf(w, "from: %s\tto%s\tamount:%s\tnonce:%s\n",rt.Data["from"],rt.Data["to"],rt.Data["amount"],rt.Data["nonce"])
+	}
+	w.Flush()
 }
