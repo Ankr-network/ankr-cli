@@ -17,6 +17,7 @@ import (
 	"golang.org/x/crypto/sha3"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -70,7 +71,7 @@ func KeyFileWriter(path, keyFile string) (io.WriteCloser, error) {
 	if err := os.MkdirAll(path, 0755); err != nil {
 		return nil, err
 	}
-	kf := path + "/" + keyFile
+	kf := filepath.Join(path, keyFile)
 	f, err := os.Create(kf)
 	if err != nil {
 		//panic(err)
