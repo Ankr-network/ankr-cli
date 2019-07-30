@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/tendermint/tendermint/cmd/ankr_cli/cmd"
+	"github.com/Ankr-network/ankr-chain-cli/cmd"
 )
 
 func main()  {
