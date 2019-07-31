@@ -59,7 +59,7 @@ var(
 // queryCmd represents the query command
 var queryCmd = &cobra.Command{
 	Use:   "query",
-	Short: "A brief description of your command",
+	Short: "query information from ankr chain",
 }
 
 func init() {
@@ -70,6 +70,7 @@ func init() {
 	appendSubCmd(queryCmd, "transaction","transaction allows you to query the transaction results.", transactionInfo, addTransactionInfoFlags)
 	appendSubCmd(queryCmd, "block", "Get block at a given height. If no height is provided, it will fetch the latest block.",
 		queryBlock, addQueryBlockFlags)
+	//deprecated
 	//appendSubCmd(queryCmd, "blockresult", "BlockResults gets ABCIResults at a given height. If no height is provided, it will fetch results for the latest block.",
 	//	queryBlockResult, addQueryBlockResultFlags)
 	appendSubCmd(queryCmd, "validators", "Get the validator set at the given block height. If no height is provided, it will fetch the current validator set.",

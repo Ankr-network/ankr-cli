@@ -25,12 +25,12 @@ func TestQueryTxInfo(t *testing.T) {
 	cmd.Execute()
 }
 
-func TestQueryBlockResult(t *testing.T) {
-	args := []string{"query", "blockresult", "--url", localUrl,"--height", "631"}
-	cmd := RootCmd
-	cmd.SetArgs(args)
-	cmd.Execute()
-}
+//func TestQueryBlockResult(t *testing.T) {
+//	args := []string{"query", "blockresult", "--url", localUrl,"--height", "630"}
+//	cmd := RootCmd
+//	cmd.SetArgs(args)
+//	cmd.Execute()
+//}
 
 func TestQueryValidator(t *testing.T) {
 	args := []string{"query", "validators", "--url", remoteUrl}
