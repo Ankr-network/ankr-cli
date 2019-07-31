@@ -13,14 +13,6 @@
   revision = "c6a667db8f7714966358b148e050d248a8903cdc"
 
 [[projects]]
-  digest = "1:c7a49d5f4cb09e108f83f7164ed7eed6dbd0707ff28d879e7dd88e18f45dc55b"
-  name = "github.com/Ankr-network/dccn-tendermint"
-  packages = ["rpc/client"]
-  pruneopts = "UT"
-  revision = "4930b61a381b9fb9bc530eb5deb56ea6429a1c3a"
-  version = "v0.18.0"
-
-[[projects]]
   digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
@@ -61,7 +53,7 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:06f55fd58b217e35417da6b70ed6cb5adcb5fde0d443699b20a4863526daa8a4"
+  digest = "1:fdf5169073fb0ad6dc12a70c249145e30f4058647bea25f0abd48b6d9f228a11"
   name = "github.com/go-kit/kit"
   packages = [
     "log",
@@ -73,8 +65,8 @@
     "metrics/prometheus",
   ]
   pruneopts = "UT"
-  revision = "150a65a7ec6156b4b640c1fd55f26fd3d475d656"
-  version = "v0.9.0"
+  revision = "4dc7be5d2d12881735283bcab7352178e190fc71"
+  version = "v0.6.0"
 
 [[projects]]
   digest = "1:4062bc6de62d73e2be342243cf138cf499b34d558876db8d9430e2149388a4d8"
@@ -83,6 +75,14 @@
   pruneopts = "UT"
   revision = "07c9b44f60d7ffdfb7d8efe1ad539965737836dc"
   version = "v0.4.0"
+
+[[projects]]
+  digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
+  name = "github.com/go-stack/stack"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a"
+  version = "v1.8.0"
 
 [[projects]]
   digest = "1:95e1006e41c641abd2f365dfa0f1213c04da294e7cd5f0bf983af234b775db64"
@@ -229,7 +229,7 @@
   version = "v0.8.1"
 
 [[projects]]
-  digest = "1:eb04f69c8991e52eff33c428bd729e04208bf03235be88e4df0d88497c6861b9"
+  digest = "1:e89f2cdede55684adbe44b5566f55838ad2aee1dff348d14b73ccf733607b671"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
@@ -237,8 +237,8 @@
     "prometheus/promhttp",
   ]
   pruneopts = "UT"
-  revision = "4ab88e80c249ed361d3299e2930427d9ac43ef8d"
-  version = "v1.0.0"
+  revision = "2641b987480bca71fb39738eb8c8b0d577cb1d76"
+  version = "v0.9.4"
 
 [[projects]]
   branch = "master"
@@ -385,15 +385,15 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:dc3b40a213c80dbe3ceb6f75fe0ba41ad0e0322d64e9266bc8ebdcea5a54b6ca"
+  digest = "1:ad9c4c1a4e7875330b1f62906f2830f043a23edb5db997e3a5ac5d3e6eadf80a"
   name = "github.com/tendermint/go-amino"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6423ac677daf641ec900ec831a5abe79d2e71194"
-  version = "v0.15.0"
+  revision = "dc14acf9ef15f85828bfbc561ed9dd9d2a284885"
+  version = "v0.14.1"
 
 [[projects]]
-  digest = "1:f1a3e1596b02268da05e025f7378ac2432c75821525a09ff4ecffa90cb4cf171"
+  digest = "1:1020ac104d1aa1e92014f0f50012fbb706404d166c306767ff65879f490df8ab"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -449,20 +449,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "dbf4062acd626716a37817f54550dd3776425caa"
-  version = "v0.32.1"
-
-[[projects]]
-  digest = "1:cdeca49ae7f62afbb38e71088cc7448adb52697dce75745d3d58eba75c19734d"
-  name = "github.com/tendermint/tmlibs"
-  packages = [
-    "common",
-    "log",
-    "pubsub",
-  ]
-  pruneopts = "UT"
-  revision = "1b9b5652a199ab0be2e781393fb275b66377309d"
-  version = "v0.7.0"
+  revision = "cb7aea79dbe33de0fe293c01e39bbf3f3b39c777"
+  version = "v0.31.8"
 
 [[projects]]
   branch = "master"
@@ -508,7 +496,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:592884773baa2f2871cfce60531595d30690c5afdd4fde35773204e2b625020e"
+  digest = "1:965d9eaa8f1b3e11fb52065eb6952f7713bdedb40addd9117d7abab1809c2c40"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -516,7 +504,7 @@
     "windows",
   ]
   pruneopts = "UT"
-  revision = "fc99dfbffb4e5ed5758a37e31dd861afe285406b"
+  revision = "1393eb0183657fb29200106b17a5042ec6e48dbe"
 
 [[projects]]
   digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
@@ -606,10 +594,10 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Ankr-network/dccn-common/wallet",
-    "github.com/Ankr-network/dccn-tendermint/rpc/client",
     "github.com/smartystreets/goconvey/convey",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
+    "github.com/tendermint/tendermint/rpc/client",
     "github.com/tendermint/tendermint/rpc/core/types",
     "github.com/tendermint/tendermint/types",
     "golang.org/x/crypto/pbkdf2",
