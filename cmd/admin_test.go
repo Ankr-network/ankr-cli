@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"testing"
 	"github.com/Ankr-network/dccn-common/wallet"
 	"github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 var (

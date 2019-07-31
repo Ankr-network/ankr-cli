@@ -10,15 +10,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"time"
 	"github.com/Ankr-network/dccn-common/wallet"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
 	"golang.org/x/crypto/sha3"
-	"io"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 const (

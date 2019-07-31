@@ -98,7 +98,11 @@ func generateAccounts(cmd *cobra.Command, args []string) {
 		if viper.Get(genAccOutput) != "" {
 			writePrivateKey(acc)
 		}
-		generateKeystore(acc)
+		path := viper.GetString(genAccOutput)
+		if path == "" {
+			path = configHome()
+		}
+		generateKeystore(acc, path)
 	}
 }
 
@@ -108,7 +112,7 @@ func generateAccount() Account {
 }
 
 //generate keystore based account and password
-func generateKeystore(acc Account) error {
+func generateKeystore(acc Account, path string) error {
 	fmt.Println("\nabout to export to keystore.. ")
 
 InputPassword:
@@ -150,11 +154,6 @@ InputPassword:
 	fmt.Println("\n\nexporting to keystore...")
 	ts := time.Now().UTC()
 
-	path := viper.GetString(outputFlag)
-	if path == "" {
-		path = configHome()
-	}
-
 	kfw, err := KeyFileWriter(path, fmt.Sprintf("UTC--%s--%s", toISO8601(ts), acc.Address))
 	if err != nil {
 		return err
@@ -195,7 +194,11 @@ func genKeystore(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	err = generateKeystore(acc)
+	path := viper.GetString(genkeyOutput)
+	if path == "" {
+		path = configHome()
+	}
+	err = generateKeystore(acc, path)
 	if err != nil {
 		fmt.Println(err)
 	}

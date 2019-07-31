@@ -4,15 +4,15 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/Ankr-network/dccn-tendermint/rpc/client"
 	"io"
 	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/tabwriter"
+	"github.com/tendermint/tendermint/rpc/client"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (

@@ -17,11 +17,12 @@ package cmd
 
 import (
 	"fmt"
+	"math/big"
+	"strings"
 	"github.com/Ankr-network/dccn-common/wallet"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"math/big"
-	"strings"
+
 )
 
 // adminCmd represents the admin command
