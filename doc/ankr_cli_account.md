@@ -44,22 +44,22 @@ account is used to generate new accounts, encrypt privatekey or decrypt privatek
 ## examples  
 + exportprivatekey     
     ``` 
-    PS C:\Users\ankr_zhang> ankr-chain-cli account exportprivatekey -f .\UTC--2019-07-31T08-41-55.912933900Z--C02CA68DB76A133704DDC3A1CFE84F8C8AC9F666
+    PS D:\> ankr-chain-cli account exportprivatekey -f .\UTC--2019-08-01T02-25-01.685454800Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3
     
     Please input the keystore password:
     
-    Private key exported: O7/HdfLB4/+//7oiwQypnl034j4m39unfFWXONKS+Aoc9dMGg+fBKcesdBNIeDvDP8i5CLCmV18EQTY6ErP5mw==
+    Private key exported: 1gEcOfgXL/rmMvDJPAyL48CanFTeLMU5yASNA9KXmrEVLKr+ZNU879Z3Ew0IwQqIDlRUEVdUvw4CcOyk75u5lg==
     ```
 + genaccount     
     ```
-    PS C:\Users\ankr> ankr-chain-cli account genaccount -o ./
+    PS D:\> ankr-chain-cli account genaccount -o ./
     
     generating accounts...
     
     Account_0
-    private key:  O7/HdfLB4/+//7oiwQypnl034j4m39unfFWXONKS+Aoc9dMGg+fBKcesdBNIeDvDP8i5CLCmV18EQTY6ErP5mw==
-    public key:  HPXTBoPnwSnHrHQTSHg7wz/IuQiwpldfBEE2OhKz+Zs=
-    address:  C02CA68DB76A133704DDC3A1CFE84F8C8AC9F666
+    private key:  1gEcOfgXL/rmMvDJPAyL48CanFTeLMU5yASNA9KXmrEVLKr+ZNU879Z3Ew0IwQqIDlRUEVdUvw4CcOyk75u5lg==
+    public key:  FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=
+    address:  E1403CA0DC201F377E820CFA62117A48D4D612400C20D3
     
     about to export to keystore..
     please input the keystore encryption password:
@@ -67,11 +67,12 @@ account is used to generate new accounts, encrypt privatekey or decrypt privatek
     
     exporting to keystore...
     
-    created keystore: .//UTC--2019-07-31T08-38-24.681212800Z--C02CA68DB76A133704DDC3A1CFE84F8C8AC9F666
+    created keystore: .//UTC--2019-08-01T02-25-01.685454800Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3
      ```    
 + genkeystore     
     ``` 
-    PS C:\Users\ankr> ankr-chain-cli account genkeystore -p O7/HdfLB4/+//7oiwQypnl034j4m39unfFWXONKS+Aoc9dMGg+fBKcesdBNIeDvDP8i5CLCmV18EQTY6ErP5mw==  -o ./
+    PS D:\> ankr-chain-cli account genkeystore -p 1gEcOfgXL/rmMvDJPAyL48CanFTeLMU5yASNA9KXmrEVLKr+ZNU879Z3Ew0IwQqIDlRUEVdUvw
+    4CcOyk75u5lg== -o ./
     
     about to export to keystore..
     please input the keystore encryption password:
@@ -79,11 +80,12 @@ account is used to generate new accounts, encrypt privatekey or decrypt privatek
     
     exporting to keystore...
     
-    created keystore: .//UTC--2019-07-31T08-41-55.912933900Z--C02CA68DB76A133704DDC3A1CFE84F8C8AC9F666
+    created keystore: .//UTC--2019-08-01T02-35-08.700515700Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3
     ```   
 + getbalance    
     ```
-     PS C:\Users\ankr> ankr-chain-cli account getbalance --address D6D5A1290944976DC23B331266E5DC4BD486665F703D1F --url http://localhost:26657
-     The balance is: 210.898437500000000000
+     PS D:\> ankr-chain-cli account getbalance --url http://localhost:26657 --address E1403CA0DC201F377E820CFA62117A48D4D6124
+     00C20D3
+     The balance is: 50.000000000000000000
     ```    
     

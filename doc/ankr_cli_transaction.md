@@ -22,14 +22,35 @@ Flags:
 Use "ankr_cli transaction [command] --help" for more information about a command.
 ```
 
-### Options
+### usage
 
 ```
-  -h, --help         help for transaction
-      --url string   the url of a validator
+    global options 
+        --url string       url of a validator 
+    * metering, send metering transaction.  
+        options: 
+            --dcname string      data center name
+            --namespace string   namespace
+            --privkey string     admin private key
+            --value string       the value to be set
+    * transfer, send coins to another account.   
+        options: 
+            --amount string     amount of ankr token to be transfered
+            --keystore string   keystore of the transfer from account
+            --to string         receive ankr token address
+            
 ```
-
-### usage    
 ### example    
-
-
++ metering  
+    ```
+    PS D:\> ankr-chain-cli transaction metering --url http://localhost:26657 --dcname datacenter_name --namespace test --value test-value --privkey privkey
+    Set metering success.
+    ```  
++ transfer    
+    ```
+    PS D:\> ankr-chain-cli transaction transfer --to F4656949BD747057A59DDF90A218EC352E3916A096924D --amount 20000000000000000000 --keystore .\UTC--2019-08-01T02-25-01.685454800Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3 --url http://localhost:26657
+    
+    Please input the keystore password:
+    
+    Transaction sent. Tx hash: 210AEB37AD654AE04CC7A5FC650C23CD4E03A12CC4D2A63A1288D534A8475C31
+    ``` 
