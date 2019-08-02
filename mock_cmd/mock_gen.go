@@ -208,3 +208,208 @@ func (mr *MockClientMockRecorder) Status() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockClient)(nil).Status))
 }
+
+// MockWallet is a mock of Wallet interface
+type MockWallet struct {
+	ctrl     *gomock.Controller
+	recorder *MockWalletMockRecorder
+}
+
+// MockWalletMockRecorder is the mock recorder for MockWallet
+type MockWalletMockRecorder struct {
+	mock *MockWallet
+}
+
+// NewMockWallet creates a new mock instance
+func NewMockWallet(ctrl *gomock.Controller) *MockWallet {
+	mock := &MockWallet{ctrl: ctrl}
+	mock.recorder = &MockWalletMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockWallet) EXPECT() *MockWalletMockRecorder {
+	return m.recorder
+}
+
+// GenerateKeys mocks base method
+func (m *MockWallet) GenerateKeys() (string, string, string) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateKeys")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(string)
+	return ret0, ret1, ret2
+}
+
+// GenerateKeys indicates an expected call of GenerateKeys
+func (mr *MockWalletMockRecorder) GenerateKeys() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateKeys", reflect.TypeOf((*MockWallet)(nil).GenerateKeys))
+}
+
+// GetBalance mocks base method
+func (m *MockWallet) GetBalance(ip, port, address string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBalance", ip, port, address)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBalance indicates an expected call of GetBalance
+func (mr *MockWalletMockRecorder) GetBalance(ip, port, address interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBalance", reflect.TypeOf((*MockWallet)(nil).GetBalance), ip, port, address)
+}
+
+// SetStake mocks base method
+func (m *MockWallet) SetStake(ip, port, privKey, amount, pubKey string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetStake", ip, port, privKey, amount, pubKey)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetStake indicates an expected call of SetStake
+func (mr *MockWalletMockRecorder) SetStake(ip, port, privKey, amount, pubKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStake", reflect.TypeOf((*MockWallet)(nil).SetStake), ip, port, privKey, amount, pubKey)
+}
+
+// RemoveValidator mocks base method
+func (m *MockWallet) RemoveValidator(ip, port, pubKey, privKey string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveValidator", ip, port, pubKey, privKey)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveValidator indicates an expected call of RemoveValidator
+func (mr *MockWalletMockRecorder) RemoveValidator(ip, port, pubKey, privKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveValidator", reflect.TypeOf((*MockWallet)(nil).RemoveValidator), ip, port, pubKey, privKey)
+}
+
+// RemoveMeteringCert mocks base method
+func (m *MockWallet) RemoveMeteringCert(ip, port, privKey, dcName string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveMeteringCert", ip, port, privKey, dcName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveMeteringCert indicates an expected call of RemoveMeteringCert
+func (mr *MockWalletMockRecorder) RemoveMeteringCert(ip, port, privKey, dcName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMeteringCert", reflect.TypeOf((*MockWallet)(nil).RemoveMeteringCert), ip, port, privKey, dcName)
+}
+
+// SetBalance mocks base method
+func (m *MockWallet) SetBalance(ip, port, address, amount, privKey string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetBalance", ip, port, address, amount, privKey)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetBalance indicates an expected call of SetBalance
+func (mr *MockWalletMockRecorder) SetBalance(ip, port, address, amount, privKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBalance", reflect.TypeOf((*MockWallet)(nil).SetBalance), ip, port, address, amount, privKey)
+}
+
+// SetMeteringCert mocks base method
+func (m *MockWallet) SetMeteringCert(ip, port, privKey, dc_name, cert_pem string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetMeteringCert", ip, port, privKey, dc_name, cert_pem)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetMeteringCert indicates an expected call of SetMeteringCert
+func (mr *MockWalletMockRecorder) SetMeteringCert(ip, port, privKey, dc_name, cert_pem interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMeteringCert", reflect.TypeOf((*MockWallet)(nil).SetMeteringCert), ip, port, privKey, dc_name, cert_pem)
+}
+
+// SetValidator mocks base method
+func (m *MockWallet) SetValidator(ip, port, pubKey, power, privKey string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetValidator", ip, port, pubKey, power, privKey)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetValidator indicates an expected call of SetValidator
+func (mr *MockWalletMockRecorder) SetValidator(ip, port, pubKey, power, privKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetValidator", reflect.TypeOf((*MockWallet)(nil).SetValidator), ip, port, pubKey, power, privKey)
+}
+
+// SendCoins mocks base method
+func (m *MockWallet) SendCoins(ip, port, privKey, from, to, amount string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoins", ip, port, privKey, from, to, amount)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SendCoins indicates an expected call of SendCoins
+func (mr *MockWalletMockRecorder) SendCoins(ip, port, privKey, from, to, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoins", reflect.TypeOf((*MockWallet)(nil).SendCoins), ip, port, privKey, from, to, amount)
+}
+
+// SetMetering mocks base method
+func (m *MockWallet) SetMetering(ip, port, privKey, dc, ns, value string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetMetering", ip, port, privKey, dc, ns, value)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetMetering indicates an expected call of SetMetering
+func (mr *MockWalletMockRecorder) SetMetering(ip, port, privKey, dc, ns, value interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMetering", reflect.TypeOf((*MockWallet)(nil).SetMetering), ip, port, privKey, dc, ns, value)
+}
+
+// MockWriteCloser is a mock of WriteCloser interface
+type MockWriteCloser struct {
+	ctrl     *gomock.Controller
+	recorder *MockWriteCloserMockRecorder
+}
+
+// MockWriteCloserMockRecorder is the mock recorder for MockWriteCloser
+type MockWriteCloserMockRecorder struct {
+	mock *MockWriteCloser
+}
+
+// NewMockWriteCloser creates a new mock instance
+func NewMockWriteCloser(ctrl *gomock.Controller) *MockWriteCloser {
+	mock := &MockWriteCloser{ctrl: ctrl}
+	mock.recorder = &MockWriteCloserMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockWriteCloser) EXPECT() *MockWriteCloserMockRecorder {
+	return m.recorder
+}
+
+// Write mocks base method
+func (m *MockWriteCloser) Write(p []byte) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Write", p)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Write indicates an expected call of Write
+func (mr *MockWriteCloserMockRecorder) Write(p interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockWriteCloser)(nil).Write), p)
+}
