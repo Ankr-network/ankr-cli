@@ -95,19 +95,23 @@ func setBalance(cmd *cobra.Command, args []string) {
 		fmt.Println("Error: Set balance failed.", err)
 		return
 	}
-	bal, err := wallet.GetBalance(validatorUrl[:index], validatorUrl[index+1:], address)
+	balance, err := wallet.GetBalance(validatorUrl[:index], validatorUrl[index+1:], address)
 	if err != nil {
 		fmt.Println("Error: Set balance failed", err)
 		return
 	}
-	balance, bo := new(big.Int).SetString(bal, 10)
-	if bo != true {
-		fmt.Println("Get Balance error:", err)
-		return
+	if len(balance) <= 18 {
+		balanceDecimalZero := make([]byte, 18-len(balance))
+		for i := 0; i < 18-len(balance); i++ {
+			balanceDecimalZero = append(balanceDecimalZero, '0')
+		}
+		balance = "0." + string(balanceDecimalZero) + balance
+	} else {
+		balance = balance[:len(balance)-18] + "." + balance[len(balance)-18:]
 	}
 	fmt.Println("Set balance Success.")
 	fmt.Println("Address:", address)
-	fmt.Println("Balance:", balance.Div(balance, AnkrBase))
+	fmt.Println("Balance:", balance)
 
 }
 
@@ -151,6 +155,7 @@ func setCert(cmd *cobra.Command, args []string) {
 		fmt.Println("Set metering cert failed", err)
 		return
 	}
+	fmt.Println("Set cert success.")
 }
 
 func addCertFlags(cmd *cobra.Command) {

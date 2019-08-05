@@ -1,24 +1,36 @@
-BUILD_TAGS?='ankr-chain-cli'
-OUTPUT?=build/ankr-chain-cli
-BUILD_FLAGS = -ldflags "-X github.com/tendermint/tendermint/version.GitCommit=`git rev-parse --short=8 HEAD`"
+.PHONY: build_win build_mac build_lin win_env mac_env lin_env build
 
-OUTPUTTOOLDIR?=build/tool
+build = CGO_ENABLED=0 \
+    GOOS=$(GOOS) \
+    GOARCH=$(GOARCH) \
+    go build -a \
+    -installsuffix cgo \
+    -o build/$(GOEXE) \
+    main.go
 
-export GO111MODULE=on
+build_win: GOOS=windows
+build_win: GOARCH=amd64
+build_win: GOEXE=ankr-chain-cli_$(GOOS)_$(GOARCH).exe
+build_win:
+	@echo "Building win executable"
+	@$(build)
 
-all: build install
+build_mac: GOOS=darwin
+build_mac: GOARCH=amd64
+build_mac: GOEXE=ankr-chain-cli_$(GOOS)_$(GOARCH)
+build_mac:
+	@echo "Building mac executable"
+	@$(build)
 
-build:
-	CGO_ENABLED=0 go build $(BUILD_FLAGS) -tags $(BUILD_TAGS) -o $(OUTPUT) ./main.go
+build_lin: GOOS=linux
+build_lin: GOARCH=amd64
+build_lin: GOEXE=ankr-chain-cli_$(GOOS)_$(GOARCH)
+build_lin:
+	@echo "Building linux executable"
+	@$(build)
 
-install:
-	CGO_ENABLED=0 go install  $(BUILD_FLAGS) -tags $(BUILD_TAGS) ./main.go
+clean:
+	@echo "Cleaning up all the builds"
+	@rm -f build/*
 
-fmt:
-	@go fmt ./...
-
-lint:
-	@echo "--> Running linter"
-	@golangci-lint run
-
-.PHONY: check build install fmt lint
+build_all: clean build_win build_mac build_lin

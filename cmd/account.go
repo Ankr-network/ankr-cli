@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
+	"os"
 	"strings"
 	"syscall"
 	"time"
@@ -45,6 +46,7 @@ var (
 	genkeyPrivkey  = "genkeyPrivkey"
 	genkeyOutput   = "genkeyOutput"
 	exportKeystore = "exportKeystore"
+	resetKeystore  = "resetKeystore"
 )
 
 func init() {
@@ -52,6 +54,7 @@ func init() {
 	appendSubCmd(accountCmd, "genkeystore", "generate keystore file based on private key and user input password.", genKeystore, addGenkeystoreFlags)
 	appendSubCmd(accountCmd, "getbalance", "get the balance of an address.", getBalance, addGetBalanceFlags)
 	appendSubCmd(accountCmd, "exportprivatekey", "recover private key from keystore.", exportPrivatekey, addExportFlags)
+	appendSubCmd(accountCmd,"resetpwd", "reset keystore password.", resetPwd, addResetPWDFlags)
 }
 
 type ExeCmd struct {
@@ -85,7 +88,7 @@ func addGenAccountFlags(cmd *cobra.Command) {
 
 //generate new account, encrypt private key to keystore base on user input password
 func generateAccounts(cmd *cobra.Command, args []string) {
-	fmt.Sprintln(`please record and backup keystore once it is generated, we don’t store your private key!`)
+	fmt.Println(`please record and backup keystore once it is generated, we don’t store your private key!`)
 	fmt.Println("\ngenerating accounts...")
 	numberAccount := viper.GetInt(genAccNumber)
 	for i := 0; i < numberAccount; i++ {
@@ -95,9 +98,6 @@ func generateAccounts(cmd *cobra.Command, args []string) {
 		s := fmt.Sprintf("\nAccount_%d", i)
 		fmt.Println(s)
 		fmt.Println("private key: ", acc.PrivateKey, "\npublic key: ", acc.PublicKey, "\naddress: ", acc.Address)
-		if viper.Get(genAccOutput) != "" {
-			writePrivateKey(acc)
-		}
 		path := viper.GetString(genAccOutput)
 		if path == "" {
 			path = configHome()
@@ -257,6 +257,7 @@ func exportPrivatekey(cmd *cobra.Command, args []string) {
 
 	if privateKey == "" {
 		fmt.Println("Empty privateKey!!")
+		return
 	}
 	fmt.Println("\nPrivate key exported:", privateKey)
 }
@@ -293,6 +294,81 @@ func decryptPrivatekey(file string) string {
 	return privateKey
 }
 
-func DebugValue(v interface{}) {
-	fmt.Println("Printing Value:", v)
+func resetPwd(cmd *cobra.Command, args []string) {
+	ksf := viper.GetString(resetKeystore)
+	privateKey := decryptPrivatekey(ksf)
+
+	if privateKey == "" {
+		fmt.Println("Empty privateKey!!")
+		return
+	}
+
+	acc, err := getAccountFromPrivatekey(privateKey)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	pwd := readPassword()
+
+	cryptoStruct, err := EncryptDataV3([]byte(acc.PrivateKey), []byte(pwd), StandardScryptN, StandardScryptP)
+	if err != nil {
+		panic(err)
+	}
+	//_ := cryptoStruct
+
+	encryptedKeyJSONV3 := EncryptedKeyJSONV3{
+		Address:        acc.Address,
+		PublicKey:      acc.PublicKey,
+		Crypto:         cryptoStruct,
+		KeyJSONVersion: keyJSONVersion,
+	}
+	jsonKey, err := json.Marshal(encryptedKeyJSONV3)
+	if err != nil {
+		panic(err)
+	}
+
+	kfw, err := os.OpenFile(ksf, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0600)
+	if err != nil {
+		fmt.Println("\nUnable to open file:", ksf)
+		fmt.Println(err)
+		return
+	}
+	defer kfw.Close()
+	_, err = kfw.Write(jsonKey)
+	if err != nil {
+		fmt.Println("\nUnable to write keystore")
+		return
+	}
+
+	fmt.Println("\nPassword reset success.")
+}
+
+func addResetPWDFlags(cmd *cobra.Command){
+	err := addStringFlag(cmd, resetKeystore, fileFlag, "f", "", "the path where keystore file is located.", required)
+	if err != nil {
+		panic(err)
+	}
+}
+
+//read password from terminal
+func readPassword() []byte {
+InputPassword:
+	fmt.Print("please input the keystore encryption password:")
+	password, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Print("\nplease input password again: ")
+	confirmPassword, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		panic(err)
+	}
+
+	if string(password) != string(confirmPassword) {
+		fmt.Println("\nError:password and confirm password not match!")
+		goto InputPassword
+		//return errors.New("\npassword and confirm password not match")
+	}
+	return password
 }

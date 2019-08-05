@@ -50,7 +50,7 @@ func TestGenAccount(t *testing.T) {
 		walletPatch := gomonkey.ApplyFunc(wallet.GenerateKeys, mockWallet.GenerateKeys)
 		defer walletPatch.Reset()
 
-		args := []string{"account", "genaccount","-o", "./temp"}
+		args := []string{"account", "genaccount","-o", "./tmp"}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err := cmd.Execute()
@@ -73,9 +73,36 @@ func TestExportPriv(t *testing.T) {
 		})
 		defer filePatch.Reset()
 
-		args := []string{"account", "exportprivatekey", "--file", "file_name"}
+		args := []string{"account", "exportprivatekey", "--file", "./keystore"}
 		cmd := RootCmd
 		cmd.SetArgs(args)
-		cmd.Execute()
+		err := cmd.Execute()
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
+func TestResetPWD(t *testing.T) {
+	convey.Convey("test exporting private key from keystore", t, func() {
+		ctl := gomock.NewController(t)
+		defer ctl.Finish()
+		mockTerminal := mock_cmd.NewMockTerminal(ctl)
+		gomock.InOrder(
+			mockTerminal.EXPECT().ReadPassword(int(syscall.Stdin)).Return([]byte("123"), nil),
+			mockTerminal.EXPECT().ReadPassword(int(syscall.Stdin)).Return([]byte("abcd"), nil),
+			mockTerminal.EXPECT().ReadPassword(int(syscall.Stdin)).Return([]byte("abcd"), nil),
+			)
+		patch := gomonkey.ApplyFunc(terminal.ReadPassword, mockTerminal.ReadPassword)
+		defer patch.Reset()
+
+		filePatch := gomonkey.ApplyFunc(ioutil.ReadFile, func(file string) ([]byte, error){
+			return []byte(keyStoreString), nil
+		})
+		defer filePatch.Reset()
+
+		args := []string{"account", "resetpwd", "--file", "tmp/keystore"}
+		cmd := RootCmd
+		cmd.SetArgs(args)
+		err := cmd.Execute()
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
