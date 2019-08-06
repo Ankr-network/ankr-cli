@@ -38,7 +38,7 @@ func TestQueryBlock(t *testing.T) {
 			return blockResult, nil
 		})
 		defer clPatch.Reset()
-		args := []string{"query", "block", "--url", localUrl, "--height", "631" }
+		args := []string{"query", "block", "--nodeurl", localUrl, "--height", "631" }
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err = cmd.Execute()
@@ -64,7 +64,7 @@ func TestQueryTxInfo(t *testing.T) {
 		})
 		defer clPatch.Reset()
 
-		args := []string{"query", "transaction", "--url", "http://localhost:26657", "--txid", "0x72fb3fa4735e2de3e56ab50a5d2ddcdbd019012b34a226dce0b7a3d2e13bddeb"}
+		args := []string{"query", "transaction", "--nodeurl", "http://localhost:26657", "--txid", "0x72fb3fa4735e2de3e56ab50a5d2ddcdbd019012b34a226dce0b7a3d2e13bddeb"}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err = cmd.Execute()
@@ -94,7 +94,7 @@ func TestQueryValidator(t *testing.T) {
 		})
 		defer clPatch.Reset()
 
-		args := []string{"query", "validators", "--url", remoteUrl}
+		args := []string{"query", "validators", "--nodeurl", remoteUrl}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err = cmd.Execute()
@@ -124,7 +124,7 @@ func TestQueryStatus(t *testing.T) {
 		})
 		defer clPatch.Reset()
 
-		args := []string{"query", "status", "--url", "https://chain-01.dccn.ankr.com:443"}
+		args := []string{"query", "status", "--nodeurl", "https://chain-01.dccn.ankr.com:443"}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err = cmd.Execute()
@@ -154,12 +154,19 @@ func TestQueryGenesis(t *testing.T)  {
 		defer clPatch.Reset()
 
 		//start test case
-		args := []string{"query", "genesis", "--url", "https://chain-01.dccn.ankr.com:443"}
+		args := []string{"query", "genesis", "--nodeurl", "https://chain-01.dccn.ankr.com:443"}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err = cmd.Execute()
 		convey.So(err, convey.ShouldBeNil)
 	})
+}
+
+func TestQueryNewFunctions(t *testing.T) {
+	args := []string{""}
+	cmd := RootCmd
+	cmd.SetArgs(args)
+
 }
 
 func TestQueryConsensusState(t *testing.T)  {
@@ -184,7 +191,7 @@ func TestQueryConsensusState(t *testing.T)  {
 		defer clPatch.Reset()
 
 		//start test
-		args := []string{"query", "consensusstate", "--url", "https://chain-01.dccn.ankr.com:443"}
+		args := []string{"query", "consensusstate", "--nodeurl", "https://chain-01.dccn.ankr.com:443"}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err = cmd.Execute()
@@ -214,7 +221,7 @@ func TestQueryUnconfirmedTxs(t *testing.T)  {
 		defer clPatch.Reset()
 
 		//start test
-		args := []string{"query", "unconfirmedtxs", "--url", "https://chain-01.dccn.ankr.com:443"}
+		args := []string{"query", "unconfirmedtxs", "--nodeurl", "https://chain-01.dccn.ankr.com:443"}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err = cmd.Execute()

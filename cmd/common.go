@@ -4,15 +4,14 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/rpc/client"
 	"io"
-	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/tabwriter"
-	"github.com/tendermint/tendermint/rpc/client"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -22,7 +21,7 @@ var (
 	outputFlag        = "output"  //short name `o`
 	privkeyFlag       = "privkey" //short name `p`
 	addressFlag       = "address"
-	urlFlag           = "url"
+	urlFlag           = "nodeurl"
 	required          = "required"
 
 	//transaction flags
@@ -44,9 +43,13 @@ var (
 	txidFlag = "txid"
 	approveFlag = "approve"
 	limitFlag = "limit"
-
-	//ankr coin base
-	AnkrBase = big.NewInt(1000000000000000000)
+	queryFlag = "query"
+	pageFlag = "page"
+	perPageFlag = "perpage"
+	meteringFlag = "metering"
+	timeStampFlag = "timestamp"
+	typeFlag = "type"
+	fromFlag = "from"
 )
 
 // retriveUserInput is a function that can retrive user input in form of string. By default,

@@ -70,7 +70,7 @@ func TestTransaction(t *testing.T) {
 			"C:\\Users\\ankr_zhang\\AppData\\Local\\ankr-chain\\config\\UTC--2019-07-23T05-54-59.725333000Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3",
 			"--to", "F4656949BD747057A59DDF90A218EC352E3916A096924D",
 			"--amount", "20000000000000000000",
-			"--url", localUrl}
+			"--nodeurl", localUrl}
 		//args := []string{"transaction", "transfer", "--help"}
 		cmd := RootCmd
 		cmd.SetArgs(args)

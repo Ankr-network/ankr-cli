@@ -8,6 +8,7 @@ import (
 var RootCmd = &cobra.Command{
 	Use:   "ankr_cli",
 	Short: "ankr_cli is used to interacting with ankr blockchain",
+	ValidArgs:nil,
 }
 
 func init() {
@@ -16,4 +17,5 @@ func init() {
 	RootCmd.AddCommand(transactionCmd)
 	RootCmd.AddCommand(adminCmd)
 	RootCmd.AddCommand(queryCmd)
+	//RootCmd.GenBashCompletionFile("ankr-chain-cli.sh")
 }

@@ -27,7 +27,7 @@ func TestAdmin(t *testing.T) {
 		wsPatch := gomonkey.ApplyFunc(wallet.SetBalance, mockWallet.SetBalance)
 		defer wsPatch.Reset()
 		//start test case
-		args := []string{"admin", "setbalance", "--address", "95CD00025C3807CEE9804D19B1E410A30A47B303371C12","--amount","12000000000000000000" ,"--url", "http://localhost:26657", "--privkey", adminPrivate}
+		args := []string{"admin", "setbalance", "--address", "95CD00025C3807CEE9804D19B1E410A30A47B303371C12","--amount","12000000000000000000" ,"--nodeurl", "http://localhost:26657", "--privkey", adminPrivate}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err := cmd.Execute()
@@ -47,7 +47,7 @@ func TestSetValidator(t *testing.T) {
 		svPatch := gomonkey.ApplyFunc(wallet.SetValidator, mockWallet.SetValidator)
 		defer svPatch.Reset()
 		//start test case
-		args := []string{"admin", "setvalidator", "--pubkey", "FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=","--power","20" ,"--url", "http://localhost:26657", "--privkey", adminPrivate}
+		args := []string{"admin", "setvalidator", "--pubkey", "FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=","--power","20" ,"--nodeurl", "http://localhost:26657", "--privkey", adminPrivate}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err := cmd.Execute()
@@ -67,7 +67,7 @@ func TestSetCert(t *testing.T) {
 		smPatch := gomonkey.ApplyFunc(wallet.SetMeteringCert, mockWallet.SetMeteringCert)
 		defer smPatch.Reset()
 		//start test case
-		args := []string{"admin", "setcert", "--dcname", "dc-name","--perm","perm-string" ,"--url", "http://localhost:26657", "--privkey", adminPrivate}
+		args := []string{"admin", "setcert", "--dcname", "dc-name","--perm","perm-string" ,"--nodeurl", "http://localhost:26657", "--privkey", adminPrivate}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err := cmd.Execute()
@@ -87,7 +87,7 @@ func TestRemoveCert(t *testing.T) {
 		wbPatch := gomonkey.ApplyFunc(wallet.RemoveMeteringCert, mockWallet.RemoveMeteringCert)
 		defer wbPatch.Reset()
 
-		args := []string{"admin", "removecert", "--dcname", "my-dcname","--url", "http://localhost:26657", "--privkey", adminPrivate}
+		args := []string{"admin", "removecert", "--dcname", "my-dcname","--nodeurl", "http://localhost:26657", "--privkey", adminPrivate}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err := cmd.Execute()
@@ -107,7 +107,7 @@ func TestSetStake(t *testing.T) {
 		wbPatch := gomonkey.ApplyFunc(wallet.SetStake, mockWallet.SetStake)
 		defer wbPatch.Reset()
 		//start test case
-		args := []string{"admin", "setstake", "--pubkey", "FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=","--amount","99" ,"--url", "http://localhost:26657", "--privkey", adminPrivate}
+		args := []string{"admin", "setstake", "--pubkey", "FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=","--amount","99" ,"--nodeurl", "http://localhost:26657", "--privkey", adminPrivate}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err := cmd.Execute()
@@ -128,7 +128,7 @@ func TestRemoveValidator(t *testing.T) {
 		defer rmvPatch.Reset()
 
 		//start test case
-		args := []string{"admin", "removevalidator", "--pubkey", `FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=`,"--url", localUrl, "--privkey",
+		args := []string{"admin", "removevalidator", "--pubkey", `FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=`,"--nodeurl", localUrl, "--privkey",
 			adminPrivate}
 		cmd := RootCmd
 		cmd.SetArgs(args)

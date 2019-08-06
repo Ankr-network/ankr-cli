@@ -22,7 +22,7 @@ func TestGetBalance(t *testing.T) {
 		patch := gomonkey.ApplyFunc(wallet.GetBalance, mockWallet.GetBalance)
 		defer patch.Reset()
 
-		args := []string{"account", "getbalance", "--address", "95CD00025C3807CEE9804D19B1E410A30A47B303371C12", "--url", "https://chain-01.dccn.ankr.com:443"}
+		args := []string{"account", "getbalance", "--address", "95CD00025C3807CEE9804D19B1E410A30A47B303371C12", "--nodeurl", "https://chain-01.dccn.ankr.com:443"}
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err := cmd.Execute()
