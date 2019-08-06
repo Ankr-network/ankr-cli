@@ -6,14 +6,8 @@ replace github.com/tendermint/tendermint => github.com/Ankr-network/tendermint v
 
 require (
 	github.com/Ankr-network/dccn-common v0.0.0-20190729064917-c6a667db8f77
-	github.com/btcsuite/btcd v0.0.0-20190629003639-c26ffa870fd8 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20190706150252-9beb055b7962 // indirect
-	github.com/rs/cors v1.6.0 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/syndtr/goleveldb v1.0.0 // indirect
-	github.com/tendermint/go-amino v0.15.0 // indirect
-	github.com/tendermint/tendermint v0.32.1
+	github.com/tendermint/tendermint v0.32.2
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
-	google.golang.org/genproto v0.0.0-20180831171423-11092d34479b // indirect
 )

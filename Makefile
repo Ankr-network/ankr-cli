@@ -1,5 +1,7 @@
 .PHONY: build_win build_mac build_lin win_env mac_env lin_env build
 
+export GO111MODULE=on
+
 build = CGO_ENABLED=0 \
     GOOS=$(GOOS) \
     GOARCH=$(GOARCH) \
