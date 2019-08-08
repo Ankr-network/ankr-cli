@@ -229,6 +229,16 @@ func TestQueryUnconfirmedTxs(t *testing.T)  {
 	})
 }
 
+func TestTxSearch(t *testing.T) {
+	convey.Convey("test txSearch function", t, func() {
+		args := []string{"query", "transaction", "--nodeurl", localUrl, "--type","Send", "--height", "[34:]"}
+		cmd := RootCmd
+		cmd.SetArgs(args)
+		err := cmd.Execute()
+		convey.So(err, convey.ShouldBeNil)
+	})
+}
+
 var (
 	//mock client responses
 	blockResultByte = `{

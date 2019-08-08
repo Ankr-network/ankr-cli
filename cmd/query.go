@@ -19,7 +19,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,6 +26,7 @@ import (
 	core_types "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
 	"os"
+	"regexp"
 	"strings"
 	"text/tabwriter"
 )
@@ -45,12 +45,12 @@ var(
 	trxMetering = "trxMetering"
 	trxTimeStamp = "trxTimeStamp"
 	trxType = "trxType"
+	trxHeight = "trxHeight"
 	trxFrom = "trxFrom"
 	trxTo = "trxTo"
 
 	//bind block flags
 	blockHeight = "blockHeight"
-	blockResultHeight = "blockResultHeight"
 	validatorHeight = "validatorHeight"
 	unconfirmedTxLimit = "unconfirmedTxLimit"
 
@@ -76,8 +76,10 @@ var(
      querySetMetering = "setmetering"
 )
 
-var txSearchTags = []string{"app.type", "app.fromaddress", "app.toaddress", "app.timestamp", "app.metering"}
-
+var (
+	txSearchTags = []string{"app.type", "app.fromaddress", "app.toaddress", "app.timestamp", "app.metering"}
+	txSearchFlags = []string{txidFlag, meteringFlag, timeStampFlag, typeFlag, fromFlag, toFlag, heightFlag}
+)
 // queryCmd represents the query command
 var queryCmd = &cobra.Command{
 	Use:   "query",
@@ -120,9 +122,17 @@ func transactionInfo(cmd *cobra.Command, args []string)  {
 		fmt.Println(tooFewFlags)
 		return
 	}
-
-	//debug
-	fmt.Println("Number of flags:", numFlags)
+	//collectedFlags := make([]string, 0, numFlags)
+	collectedFlags := make(map[string] string, numFlags)
+	for _, flag := range txSearchFlags {
+		if cmd.Flag(flag).Changed {
+			collectedFlags[flag] = cmd.Flag(flag).Value.String()
+		}
+	}
+	if !isValidFlags(collectedFlags) {
+		fmt.Println("Invalid flags is received.")
+		return
+	}
 
 	validatorUrl = viper.GetString(queryUrl)
 	if len(validatorUrl) < 1 {
@@ -130,35 +140,188 @@ func transactionInfo(cmd *cobra.Command, args []string)  {
 		return
 	}
 	cl := newAnkrHttpClient(validatorUrl)
-	txid := viper.GetString(trxTxid)
-	approve := viper.GetBool(trxApprove)
 
-	//query transaction --txid
-	if len(txid) > 1{
-		//if more than two flags are received, return too many flags error
-		if numFlags == 2 {
-			if 	strings.HasPrefix(txid, "0x") {
-				txid = strings.TrimLeft(txid, "0x")
-			}
-			//txid = txid[2:]
-			hash, err := hex.DecodeString(txid)
-			if err != nil {
-				fmt.Println("Invalid transaction id format!")
-				return
-			}
-			rpcTransaction(cl, hash, approve)
-			return
-		}else {
-			fmt.Println("Too many flags")
+	//query transaction --txid hash --nodeurl https://xx:xx --prove bool
+	if txid, ok := collectedFlags[txidFlag]; ok {
+		if 	strings.HasPrefix(txid, "0x") {
+			txid = strings.TrimLeft(txid, "0x")
+		}
+		hash, err := hex.DecodeString(txid)
+		if err != nil {
+			fmt.Println("Invalid transaction id format!")
 			return
 		}
+		rpcTransaction(cl, hash)
+		return
 	}
-	rpcTxSearch(cl, numFlags)
+
+	//query transaction --type/from/to/metering/timestamp
+	query := formatQueryContent(collectedFlags)
+	resp, err := doTxSearch(cl, query)
+	if err != nil {
+		fmt.Println("Query transaction failed.")
+		fmt.Println(err)
+		return
+	}
+	w := newTabWriter(os.Stdout)
+	//write txSearchResult header
+	fmt.Fprintln(w, "TotalCount:\t",resp.TotalCount)
+	fmt.Fprintf(w, "type\thash\theight\tindex\tdetail\n")
+	writeTxSearchResult(resp, w)
+	w.Flush()
+}
+func formatQueryContent(flags map[string]string) string {
+	result := make([]string, 0, len(flags))
+	var query string
+	for key, value := range flags {
+		switch key {
+		case meteringFlag:
+			query = fmt.Sprintf("app.metering='%s'",value)
+		case timeStampFlag:
+			valueSlice := strings.Split(value, ":")
+			if len(valueSlice) == 1 {
+				//if only one digit is received in interval, trim bracket
+				value = strings.TrimPrefix(value,"[")
+				value = strings.TrimPrefix(value,"(")
+				value = strings.TrimRight(value,"]")
+				value = strings.TrimRight(value,")")
+				query = fmt.Sprintf("app.timestamp=%s",value)
+				break
+			}
+			interval := formatInterval(value)
+			if len(interval) != 2{
+				query = fmt.Sprintf("app.timestamp%s", interval[0])
+				break
+			}
+			query = fmt.Sprintf("app.timestamp%s and app.timestamp%s", interval[0], interval[1])
+		case typeFlag:
+			query = fmt.Sprintf("app.type='%s'",value)
+		case fromFlag:
+			query = fmt.Sprintf("app.fromaddress='%s'",value)
+		case toFlag:
+			query = fmt.Sprintf("app.toaddress='%s'",value)
+		case heightFlag:
+			valueSlice := strings.Split(value, ":")
+			if len(valueSlice) == 1 {
+				value = strings.TrimPrefix(value,"[")
+				value = strings.TrimPrefix(value,"(")
+				value = strings.TrimRight(value,"]")
+				value = strings.TrimRight(value,")")
+				query = fmt.Sprintf("tx.height=%s",value)
+				break
+			}
+			interval := formatInterval(value)
+			if len(interval) != 2{
+				query = fmt.Sprintf("tx.height%s", interval[0])
+				break
+			}
+			query = fmt.Sprintf("tx.height%s and tx.height%s", interval[0], interval[1])
+		}
+		result =append(result, query)
+	}
+	return strings.Join(result, " and ")
+}
+func formatInterval(period string) []string {
+	periodSlice := strings.Split(period, ":")
+	leftOp := []rune(periodSlice[0])[0]
+	length := len(periodSlice[1])
+	rightOp := []rune(periodSlice[1])[length-1]
+	var leftValue, rightValue string
+	switch leftOp {
+	case '(':
+		leftValue = strings.TrimLeft(periodSlice[0],"(")
+		if len(leftValue) > 0 {
+			leftValue = fmt.Sprintf(">%s",string(leftValue))
+		}
+	case '[':
+		leftValue = strings.TrimLeft(periodSlice[0],"[")
+		if len(leftValue) > 0 {
+			leftValue = fmt.Sprintf(">%s",string(leftValue))
+		}
+	}
+
+	switch rightOp {
+	case ')':
+		rightValue = strings.TrimRight(periodSlice[1],")")
+		if len(rightValue) > 0{
+			rightValue = fmt.Sprintf("<%s",rightValue)
+		}
+	case ']':
+		rightValue = strings.TrimRight(periodSlice[1],"]")
+		if len(rightValue) > 0{
+			rightValue = fmt.Sprintf("<=%s",rightValue)
+		}
+	}
+	result := make([]string, 0 , 2)
+	if leftValue != ""{
+		result = append(result, leftValue)
+	}
+	if rightValue != ""{
+		result = append(result, rightValue)
+	}
+	return result
+}
+
+//rules of mutiple query condition, check if the cmd flags are correctly set
+func isValidFlags(flags map[string]string) bool {
+	//if txid is set, only nodeurl is valid
+	if _, ok := flags[txidFlag]; ok{
+		// after getting ride of prove flag, total flags should be no more than 2
+		if len(flags) != 2{
+			return false
+		}
+		return true
+	}
+
+	periodRegexp := `((\(|\[)\d\:\d+(\]|\()|\d+)`
+	reg, _ := regexp.Compile(periodRegexp)
+	//check time and height format
+	if timeStamp, ok := flags[timeStampFlag]; ok {
+		if matched := reg.MatchString(timeStamp); !matched {
+			return false
+		}
+	}
+	if height, ok := flags[heightFlag]; ok {
+		if matched := reg.MatchString(height); !matched {
+			return false
+		}
+	}
+
+	_, existsFrom := flags[fromFlag]
+	_, existsTo := flags[toFlag]
+	//if transaction type is set, check if other flags is valid
+	if value, ok := flags[typeFlag];ok {
+		value = strings.ToLower(value)
+		switch value {
+		case querySetBalance, querySetStake, queryUpdateValidator:
+			// after getting ride of page and perpage flag, total flags should be no more than 2
+			if len(flags) != 2 {
+				return false
+			}
+		case querySetMetering:
+			if existsFrom || existsTo {
+				return false
+			}
+		case querySend:
+			return true
+		default:   //unknown transaction type
+			return false
+		}
+		return true
+	}
+
+	if _, ok := flags[meteringFlag]; ok {
+		if existsTo || existsFrom {
+			return false
+		}
+	}
+	return true
 }
 
 //query transaction and display result
-func rpcTransaction(cl *client.HTTP, hash []byte, approve bool)  {
-	resp, err := cl.Tx(hash, approve )
+func rpcTransaction(cl *client.HTTP, hash []byte)  {
+	prove := viper.GetBool(approveFlag)
+	resp, err := cl.Tx(hash, prove)
 	if err != nil {
 		fmt.Println("Failed to query transaction.")
 		fmt.Println(err)
@@ -166,187 +329,16 @@ func rpcTransaction(cl *client.HTTP, hash []byte, approve bool)  {
 	}
 	result := parseTx(resp)
 	w := newTabWriter(os.Stdout)
-	fmt.Fprintf(w, "tx type\thash\tblock height\tblock index\tdetail\n")
-	displayTx(result, w)
+	fmt.Fprintf(w, "type\thash\theight\tindex\tdetail\n")
+	writeTx(result, w)
 	w.Flush()
 }
 
-func rpcTxSearch(cl *client.HTTP, numFlags int)  {
-	queryType := viper.GetString(trxType)
-	var resp *core_types.ResultTxSearch
-	var err error
-	if queryType != ""{
-		queryType = strings.ToLower(queryType)
-		switch queryType {
-		case querySend:
-			resp, err = txSearchSend(cl)
-		case querySetBalance:
-			if numFlags == 2 {
-				//query and display
-				queryContent := "SetBalance"
-				resp, err = doTxSearch(cl, queryContent)
-				break
-			}
-			fmt.Println(tooManyFlags)
-		case querySetMetering:
-			resp, err = txSearchMetering(cl)
-		case querySetStake:
-			if numFlags == 2 {
-				//query and display
-				queryContent := "SetStake"
-				resp, err = doTxSearch(cl, queryContent)
-				break
-			}
-			fmt.Println(tooManyFlags)
-		case queryUpdateValidator:
-			//todo
-			if numFlags == 2 {
-				//query and display
-				queryContent := "UpdateValidator"
-				resp, err = doTxSearch(cl, queryContent)
-				break
-			}
-			fmt.Println(tooManyFlags)
-		}
-		if err != nil {
-			fmt.Println("Query transaction failed.")
-			fmt.Println(err)
-			return
-		}
-		jsonByte, err := json.MarshalIndent(resp, "", "\t")
-		if err != nil {
-			fmt.Println("Json marshal failed.")
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(string(jsonByte))
-		return
+func writeTxSearchResult(result *core_types.ResultTxSearch, w *tabwriter.Writer)  {
+	for _, txResult := range result.Txs {
+		txParsed := parseTx(txResult)
+		writeTx(txParsed, w)
 	}
-
-	if timeStamp := viper.GetInt(trxTimeStamp); timeStamp != 0 {
-		queryContent := "app.timestamp="+ fmt.Sprintf("%d", timeStamp)
-		resp, err = doTxSearch(cl, queryContent)
-		if err != nil {
-			fmt.Println("Query transaction failed.")
-			fmt.Println(err)
-			return
-		}
-		if txMetering := viper.GetString(trxMetering); txMetering != ""{
-			meterSlice := strings.Split(txMetering, ":")
-			if len(meterSlice) != 2 {
-				fmt.Println("Invalid metering flag received")
-				return
-			}
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Data["dc name"] == meterSlice[0] && txResult.Data["name space"] == meterSlice [1]{
-					result = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-			jsonByte, err := json.MarshalIndent(resp, "", "\t")
-			if err != nil {
-				fmt.Println("Json marshal failed.")
-				fmt.Println(err)
-				return
-			}
-			fmt.Println(string(jsonByte))
-			return
-		}
-		if from := viper.GetString(trxFrom); from != ""{
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Data["from"] == from {
-					result = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-
-		if to := viper.GetString(trxTo); to != "" {
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Data["to"] == to {
-					resp.Txs = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-
-		jsonByte, err := json.MarshalIndent(resp, "", "\t")
-		if err != nil {
-			fmt.Println("Json marshal failed.")
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(string(jsonByte))
-		return
-	}
-
-	if txMetering := viper.GetString(trxMetering); txMetering != "" {
-		queryContent := "app.metering="+ txMetering
-		resp, err = doTxSearch(cl, queryContent)
-		if err != nil {
-			fmt.Println("Query transaction failed.")
-			fmt.Println(err)
-			return
-		}
-	}
-
-	if from := viper.GetString(trxFrom); from != ""{
-		queryContent := "app.fromaddress="+ from
-		resp, err = doTxSearch(cl, queryContent)
-		if err != nil {
-			fmt.Println("Query transaction failed.")
-			fmt.Println(err)
-			return
-		}
-		if to := viper.GetString(trxTo); to != "" {
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Data["to"] == to {
-					resp.Txs = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-		jsonByte, err := json.MarshalIndent(resp, "", "\t")
-		if err != nil {
-			fmt.Println("Json marshal failed.")
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(string(jsonByte))
-		return
-	}
-
-	if to := viper.GetString(trxTo); to != ""{
-		queryContent := "app.to="+ to
-		resp, err = doTxSearch(cl, queryContent)
-		if err != nil {
-			fmt.Println("Query transaction failed.")
-			fmt.Println(err)
-			return
-		}
-		jsonByte, err := json.MarshalIndent(resp, "", "\t")
-		if err != nil {
-			fmt.Println("Json marshal failed.")
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(string(jsonByte))
-		return
-	}
-
-	fmt.Println("Invalid query arguments, please refer to transaction examples")
 }
 
 func doTxSearch(cl *client.HTTP, qt string) (*core_types.ResultTxSearch, error) {
@@ -355,148 +347,6 @@ func doTxSearch(cl *client.HTTP, qt string) (*core_types.ResultTxSearch, error) 
 	prove := viper.GetBool(trxApprove)
 	resp, err := cl.TxSearch(qt, prove, queryPage, queryPerPage)
 	return resp, err
-}
-
-//txSearch Send type, filter results
-func txSearchSend(cl *client.HTTP) (*core_types.ResultTxSearch, error){
-	var resp *core_types.ResultTxSearch
-	var err error
-
-	if timeStamp := viper.GetInt(trxTimeStamp); timeStamp != 0{
-		queryContent := "app.timestamp="+ fmt.Sprintf("%d", timeStamp)
-		resp, err = doTxSearch(cl, queryContent)
-		if err != nil || resp.TotalCount == 0 {
-			return resp, err
-		}
-		if from := viper.GetString(trxFrom); from != ""{
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Data["from"] == from {
-					result = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-
-		if to := viper.GetString(trxTo); to != "" {
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Data["to"] == to {
-					resp.Txs = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-
-		if ttype := viper.GetString(trxType); ttype != ""{
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Type == "transfer" {
-					resp.Txs = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-		return resp, nil
-	}
-
-	if from := viper.GetString(trxFrom); from != ""{
-		queryContent := "app.fromaddress="+ from
-		resp, err = doTxSearch(cl, queryContent)
-		if err != nil || resp.TotalCount == 0 {
-			return resp, err
-		}
-
-		if to := viper.GetString(trxTo); to != "" {
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Data["to"] == to {
-					resp.Txs = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-		if ttype := viper.GetString(trxType); ttype != ""{
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Type == "transfer" {
-					resp.Txs = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-		return resp, nil
-	}
-
-	if to := viper.GetString(trxTo); to != ""{
-		queryContent := "app.toaddress="+ to
-		resp, err = doTxSearch(cl, queryContent)
-		if err != nil || resp.TotalCount == 0 {
-			return resp, err
-		}
-
-		if ttype := viper.GetString(trxType); ttype != ""{
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Type == "transfer" {
-					resp.Txs = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-		return resp, nil
-	}
-
-	queryContent := "app.type=Send"
-	return doTxSearch(cl, queryContent)
-}
-
-func txSearchMetering(cl *client.HTTP) (*core_types.ResultTxSearch, error){
-	var resp *core_types.ResultTxSearch
-	var err error
-
-	if timeStamp := viper.GetInt(trxTimeStamp); timeStamp != 0{
-		queryContent := "app.timestamp="+ fmt.Sprintf("%d", timeStamp)
-		resp, err = doTxSearch(cl, queryContent)
-		if err != nil || resp.TotalCount == 0 {
-			return resp, err
-		}
-		if txMetering := viper.GetString(trxMetering); txMetering != ""{
-			meterSlice := strings.Split(txMetering, ":")
-			if len(meterSlice) != 2 {
-				return resp, errors.New("\nInvalid metering flag received")
-			}
-			result := make([]*core_types.ResultTx,0, resp.TotalCount)
-			for _, tx := range resp.Txs {
-				txResult := parseTx(tx)
-				if txResult.Data["dc name"] == meterSlice[0] && txResult.Data["name space"] == meterSlice [1]{
-					result = append(result, tx)
-				}
-			}
-			resp.Txs = result
-			resp.TotalCount = len(resp.Txs)
-		}
-		return resp, nil
-	}
-	if txMetering := viper.GetString(trxMetering); txMetering != "" {
-		queryContent := "app.metering="+ txMetering
-		return doTxSearch(cl, queryContent)
-	}
-
-	queryContent := "app.type=SetMetering"
-	return doTxSearch(cl, queryContent)
 }
 
 func addTransactionInfoFlags(cmd *cobra.Command)  {
@@ -518,7 +368,9 @@ func addTransactionInfoFlags(cmd *cobra.Command)  {
 		panic(err)
 	}
 
-	err = addIntFlag(cmd, trxTimeStamp, timeStampFlag, "", 0, "transaction executed timestamp", "")
+	err = addStringFlag(cmd, trxTimeStamp, timeStampFlag, "", "",
+		"transaction executed timestamp. Input can be an exactly unix timestamp  or a time interval separate by \":\", and time interval is enclosed with \"[]\" or \"()\" which is mathematically open interval and close interval." ,
+		"")
 	if err != nil {
 		panic(err)
 	}
@@ -539,6 +391,12 @@ func addTransactionInfoFlags(cmd *cobra.Command)  {
 	}
 
 	err = addStringFlag(cmd, trxType, typeFlag, "", "", "Ankr chain predefined types, SetMetering, SetBalance, UpdatValidator, SetStake, Send", "")
+	if err != nil {
+		panic(err)
+	}
+
+	err = addStringFlag(cmd, trxHeight, heightFlag, "", "",
+		"block height. Input can be an exactly block height  or a height interval separate by \":\", and height interval is enclosed with \"[]\" or \"()\" which is mathematically open interval and close interval.", "")
 	if err != nil {
 		panic(err)
 	}
@@ -924,13 +782,17 @@ func parseTx(tx *core_types.ResultTx) ResultTx {
 }
 
 //display transaction information
-func displayTx(rt ResultTx, w *tabwriter.Writer)  {
+func writeTx(rt ResultTx, w *tabwriter.Writer)  {
 	//table header
 	fmt.Fprintf(w, "%s\t%s\t%d\t%d\t", rt.Type, rt.Hash, rt.Height, rt.Index)
 	//table contents
 	switch rt.Type {
 	case "transfer":
-		fmt.Fprintf(w, "from: %s\tto:%s\tamount:%s\tnonce:%s\n:",rt.Data["from"],rt.Data["to"],rt.Data["amount"],rt.Data["nonce"])
+		fmt.Fprintf(w, "from: %s\tto:%s\tamount:%s\tnonce:%s\n",rt.Data["from"],rt.Data["to"],rt.Data["amount"],rt.Data["nonce"])
+		//fmt.Fprintf(w, "from: %s\n",rt.Data["from"])
+		//fmt.Fprintf(w, "\t\t\t\tnonce: %s\n",rt.Data["from"])
+		//fmt.Fprintf(w, "\t\t\t\tto: %s\n",rt.Data["from"])
+		//fmt.Fprintf(w, "\t\t\t\tamount: %s\n",rt.Data["from"])
 	case "set metering":
 		fmt.Fprintf(w,"dc-name:%s\tname-space:%s\tvalue:%s\n",rt.Data["dc name"],rt.Data["name space"],rt.Data["value"])
 	case "set balance":
