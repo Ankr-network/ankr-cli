@@ -50,5 +50,5 @@ go build -o ankr-chain-cli main.go
 
 * [ankr_cli account](doc/ankr_cli_account.md)	 - account is used to generate new accounts, encrypt privatekey or decrypt privatekey from keystore
 * [ankr_cli admin](doc/ankr_cli_admin.md)	 - admin is used to do admin operations 
-* [ankr_cli query](doc/ankr_cli_query.md)	 - A brief description of your command
+* [ankr_cli query](doc/ankr_cli_query.md)	 - query information from ankr chain
 * [ankr_cli transaction](doc/ankr_cli_transaction.md)	 - transaction is used to send coins to specified address or send metering
