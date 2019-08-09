@@ -43,13 +43,13 @@ var (
 	txidFlag = "txid"
 	approveFlag = "approve"
 	limitFlag = "limit"
-	queryFlag = "query"
 	pageFlag = "page"
 	perPageFlag = "perpage"
 	meteringFlag = "metering"
 	timeStampFlag = "timestamp"
 	typeFlag = "type"
 	fromFlag = "from"
+	creatorFlag = "creator"
 )
 
 // retriveUserInput is a function that can retrive user input in form of string. By default,

@@ -6,6 +6,7 @@ package mock_cmd
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	client "github.com/tendermint/tendermint/rpc/client"
 	types "github.com/tendermint/tendermint/rpc/core/types"
 	io "io"
 	reflect "reflect"
@@ -207,6 +208,21 @@ func (m *MockClient) Status() (*types.ResultStatus, error) {
 func (mr *MockClientMockRecorder) Status() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockClient)(nil).Status))
+}
+
+// TxSearch mocks base method
+func (m *MockClient) TxSearch(c *client.HTTP, query string, prove bool, page, perPage int) (*types.ResultTxSearch, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TxSearch", c, query, prove, page, perPage)
+	ret0, _ := ret[0].(*types.ResultTxSearch)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TxSearch indicates an expected call of TxSearch
+func (mr *MockClientMockRecorder) TxSearch(c, query, prove, page, perPage interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TxSearch", reflect.TypeOf((*MockClient)(nil).TxSearch), c, query, prove, page, perPage)
 }
 
 // MockWallet is a mock of Wallet interface
@@ -412,4 +428,18 @@ func (m *MockWriteCloser) Write(p []byte) (int, error) {
 func (mr *MockWriteCloserMockRecorder) Write(p interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockWriteCloser)(nil).Write), p)
+}
+
+// Close mocks base method
+func (m *MockWriteCloser) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close
+func (mr *MockWriteCloserMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockWriteCloser)(nil).Close))
 }

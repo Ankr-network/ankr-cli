@@ -19,6 +19,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,6 +28,7 @@ import (
 	"github.com/tendermint/tendermint/types"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 )
@@ -46,6 +48,7 @@ var(
 	trxTimeStamp = "trxTimeStamp"
 	trxType = "trxType"
 	trxHeight = "trxHeight"
+	trxCreator = "trxCreator"
 	trxFrom = "trxFrom"
 	trxTo = "trxTo"
 
@@ -77,8 +80,9 @@ var(
 )
 
 var (
-	txSearchTags = []string{"app.type", "app.fromaddress", "app.toaddress", "app.timestamp", "app.metering"}
-	txSearchFlags = []string{txidFlag, meteringFlag, timeStampFlag, typeFlag, fromFlag, toFlag, heightFlag}
+	txSearchFlags = []string{txidFlag, meteringFlag, timeStampFlag, typeFlag, fromFlag, toFlag, heightFlag, creatorFlag}
+	periodRegexp = `((\(|\[)\d\:\d+(\]|\()|\d+)`
+	reg, _ = regexp.Compile(periodRegexp)
 )
 // queryCmd represents the query command
 var queryCmd = &cobra.Command{
@@ -91,8 +95,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	appendSubCmd(queryCmd, "transaction","transaction allows you to query the transaction results.", transactionInfo, addTransactionInfoFlags)
-	appendSubCmd(queryCmd, "block", "Get block at a given height. If no height is provided, it will fetch the latest block.",
+	appendSubCmd(queryCmd, "transaction","transaction allows you to query the transaction results with multiple conditions.", transactionInfo, addTransactionInfoFlags)
+	appendSubCmd(queryCmd, "block", "Get block at a given height. If no height is provided, it will fetch the latest block. And you can use \"detail\" to show more information about transactions contained in block",
 		queryBlock, addQueryBlockFlags)
 	//deprecated
 	//appendSubCmd(queryCmd, "blockresult", "BlockResults gets ABCIResults at a given height. If no height is provided, it will fetch results for the latest block.",
@@ -200,6 +204,8 @@ func formatQueryContent(flags map[string]string) string {
 			query = fmt.Sprintf("app.fromaddress='%s'",value)
 		case toFlag:
 			query = fmt.Sprintf("app.toaddress='%s'",value)
+		case creatorFlag:
+			query = fmt.Sprintf("app.creator='%s'",value)
 		case heightFlag:
 			valueSlice := strings.Split(value, ":")
 			if len(valueSlice) == 1 {
@@ -273,8 +279,6 @@ func isValidFlags(flags map[string]string) bool {
 		return true
 	}
 
-	periodRegexp := `((\(|\[)\d\:\d+(\]|\()|\d+)`
-	reg, _ := regexp.Compile(periodRegexp)
 	//check time and height format
 	if timeStamp, ok := flags[timeStampFlag]; ok {
 		if matched := reg.MatchString(timeStamp); !matched {
@@ -369,7 +373,7 @@ func addTransactionInfoFlags(cmd *cobra.Command)  {
 	}
 
 	err = addStringFlag(cmd, trxTimeStamp, timeStampFlag, "", "",
-		"transaction executed timestamp. Input can be an exactly unix timestamp  or a time interval separate by \":\", and time interval is enclosed with \"[]\" or \"()\" which is mathematically open interval and close interval." ,
+		"transaction executed timestamp. Input can be an exactly unix timestamp  or a time interval separate by \":\", and time interval should be enclosed with \"[]\" or \"()\" which is mathematically open interval and close interval." ,
 		"")
 	if err != nil {
 		panic(err)
@@ -396,7 +400,11 @@ func addTransactionInfoFlags(cmd *cobra.Command)  {
 	}
 
 	err = addStringFlag(cmd, trxHeight, heightFlag, "", "",
-		"block height. Input can be an exactly block height  or a height interval separate by \":\", and height interval is enclosed with \"[]\" or \"()\" which is mathematically open interval and close interval.", "")
+		"block height. Input can be an exactly block height  or a height interval separate by \":\", and height interval should be enclosed with \"[]\" or \"()\" which is mathematically open interval and close interval.", "")
+	if err != nil {
+		panic(err)
+	}
+	err = addStringFlag(cmd, trxCreator, creatorFlag, "", "", "app creator", "")
 	if err != nil {
 		panic(err)
 	}
@@ -410,16 +418,76 @@ func queryBlock(cmd *cobra.Command, args []string)  {
 		return
 	}
 	cl := newAnkrHttpClient(validatorUrl)
-	height := viper.GetInt64(blockHeight)
-	heightP := &height
-	if height <= 0 {
-		heightP = nil
-	}
-	resp, err :=cl.Block(heightP)
+	//height := viper.GetString(blockHeight)
+	from, to, err := getBlockInterval()
 	if err != nil {
-		fmt.Println("Query block failed.", err)
+		fmt.Println(err)
 		return
 	}
+
+	for iter := from; iter <= to; iter ++ {
+		heightInt := int64(iter)
+		heightP := &heightInt
+		if heightInt == -1 {
+			heightP = nil
+		}
+		resp, err :=cl.Block(heightP)
+		if err != nil {
+			fmt.Println("Query block failed.", err)
+			return
+		}
+		detail := false
+		if len(args) > 0 && args[0] == "detail"{
+			detail = true
+		}
+		outPutBlockResp(resp, detail)
+	}
+}
+
+func getBlockInterval() (from int, to int,err  error) {
+	from = -1
+	to = -1
+	heightStr := viper.GetString(blockHeight)
+
+	//height flag is not set, get the latest block
+	if heightStr == ""{
+		return from, to, nil
+	}
+
+	//if height flags is not set properly, return error
+	if matched := reg.MatchString(heightStr); !matched {
+		return from, to , errors.New("Invalid Height format, should be \"[from:to]\". ")
+	}
+
+	//strictly flow the rule [from:to]
+	heightStr = strings.TrimLeft(heightStr, "[")
+	heightStr = strings.TrimRight(heightStr, "]")
+	height, err := strconv.Atoi(heightStr)
+	if err == nil {
+		from = height
+		to = height
+		return from, to, nil
+	}
+	heightSlice := strings.Split(heightStr, ":")
+	if len(heightSlice) != 2 {
+		return from, to, errors.New("input both from and to separated with \":\". ")
+	}
+	fromStr, toStr := heightSlice[0],heightSlice[1]
+	from, err = strconv.Atoi(fromStr)
+	if err != nil {
+		return from, to, errors.New("from is not an integer. ")
+	}
+	to, err = strconv.Atoi(toStr)
+	if err != nil {
+		return from, to, errors.New("to is not an integer. ")
+	}
+	if from >to {
+		return from, to, errors.New("from should be less or equal than to")
+	}
+	return from, to, nil
+}
+
+func outPutBlockResp(resp *core_types.ResultBlock, detail bool)  {
 	w := newTabWriter(os.Stdout)
 	fmt.Fprintf(w, "\nBlock info:\n")
 	outPutHeader(w, resp.Block.Header)
@@ -427,44 +495,21 @@ func queryBlock(cmd *cobra.Command, args []string)  {
 	if resp.Block.Txs == nil || len(resp.Block.Txs) == 0 {
 		fmt.Fprintf(w, "[]\n")
 	}else{
-		outPutTransactions(w, resp.Block.Txs)
+		if detail {
+			outPutTransactions(w, resp.Block.Txs)
+		}else {
+			outPutTransactionsSimple(w, resp.Block.Txs)
+		}
 	}
 	w.Flush()
 }
+
 func addQueryBlockFlags(cmd *cobra.Command)  {
-	err := addInt64Flag(cmd, blockHeight, heightFlag, "", -1, "height of the block to query", "" )
+	err := addStringFlag(cmd, blockHeight, heightFlag, "", "", "height interval of the blocks to query. integer or block interval formatted as [from:to] are accepted ", "" )
 	if err != nil {
 		panic(err)
 	}
 }
-
-//query blockresult
-//func queryBlockResult(cmd *cobra.Command, args []string)  {
-//	validatorUrl = viper.GetString(queryUrl)
-//	if len(validatorUrl) < 1 {
-//		fmt.Println("Illegal url is received!")
-//		return
-//	}
-//	cl := newAnkrHttpClient(validatorUrl)
-//	height := viper.GetInt64(blockHeight)
-//	heightP := &height
-//	if height <= 0 {
-//		heightP = nil
-//	}
-//	resp, err := cl.BlockResults(heightP)
-//	if err != nil {
-//		fmt.Println("Query block result failed.", err)
-//		return
-//	}
-//	display(resp)
-//
-//}
-//func addQueryBlockResultFlags(cmd *cobra.Command)  {
-//	err := addInt64Flag(cmd, blockResultHeight, heightFlag, "", -1, "block height", "")
-//	if err != nil {
-//		panic(err)
-//	}
-//}
 
 //query validator
 func queryValidator(cmd *cobra.Command, args []string)  {
@@ -839,6 +884,14 @@ func outPutTransactions(w *tabwriter.Writer,txs types.Txs)  {
 		}else {
 			fmt.Fprintf(w,"unrecognized  transaction %s ", txString)
 		}
+	}
+}
+
+func outPutTransactionsSimple(w *tabwriter.Writer,txs types.Txs)  {
+	fmt.Fprintf(w, "hash\n")
+	for _, tx := range txs {
+		hash := fmt.Sprintf("0x%x",tx.Hash())
+		fmt.Fprintf(w,"%s\n", hash)
 	}
 }
 func outPutHeader(w *tabwriter.Writer, header types.Header)  {

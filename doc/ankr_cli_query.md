@@ -31,9 +31,9 @@ query information from ankr chain
 ### usage  
     global options 
         --url string       url of a validator 
-    * block, Get block at a given height.  
+    * block,  Get block at a given height. If no height is provided, it will fetch the latest block. And you can use "detail" to show more information about transactions contained in block.  
         options: 
-            --height int   height of the block to query 
+            --height int   height interval of the blocks to query. integer or block interval formatted as [from:to] are accepted 
     * consensusstate, get the summary of the consensus state.   
         options: 
             NULL
@@ -49,10 +49,20 @@ query information from ankr chain
     * status,  Get Ankr status including node info, pubkey, latest block hash, app hash, block height and time. 
         options: 
             NULL
-    * transaction,  query the transaction results. 
+    * transaction,  transaction allows you to query the transaction results with multiple conditions. 
         options:
-            --approve bool  Include a proof of the transaction inclusion in the block
-            --txid string   The transaction hash
+            --approve    bool      Include a proof of the transaction inclusion in the block
+            --txid       string    The transaction hash
+            --creator    string    app creator
+            --from       string    the from address contained in a transaction
+            --height     string    block height. Input can be an exactly block height  or a height interval separate by ":", and height interval should be enclosed with "[]" or "()" which is mathematically open interval and close interval.
+            --metering   string    query metering transaction, both datacenter name and namespace should be  provided and separated  by ":"
+            --page       int       Page number (1 based) (default 1)
+            --perpage    int       Number of entries per page(max: 100) (default 30)
+            --timestamp  string    transaction executed timestamp. Input can be an exactly unix timestamp  or a time interval separate by ":", and time interval should be enclosed with "[]" or "()" which is mathematically open interval and close interval.
+            --to         string    the to address contained in a transaction
+            --txid       string    The transaction hash
+            --type       string    Ankr chain predefined types, SetMetering, SetBalance, UpdatValidator, SetStake, Send
     * unconfirmedtxs,  unconfirmed transactions including their number.
         options: 
             --limit int   number of entries (default 30)
@@ -62,7 +72,7 @@ query information from ankr chain
 ### example  
 + block     
     ``` 
-    PS D:\> ankr-chain-cli query block --url http://localhost:26657 --height 631
+    PS D:\> ankr-chain-cli query block --url http://localhost:26657 --height 631 detail
     
     Block info:
     Version: {10 1}
@@ -225,6 +235,18 @@ query information from ankr chain
     PS D:\> ankr-chain-cli query transaction --url http://localhost:26657 --txid 0x72fb3fa4735e2de3e56ab50a5d2ddcdbd019012b34a226dce0b7a3d2e13bddeb
     tx type        hash                                                                  block height    block index    detail
     set balance    0x72FB3FA4735E2DE3E56AB50A5D2DDCDBD019012B34A226DCE0B7A3D2E13BDDEB    85403           0              address:95CD00025C3807CEE9804D19B1E410A30A47B303371C12    amount:12000000000000000000
+    ```
+    ```
+    PS D:\> ankr-chain-cli query transaction --type Send --nodeurl http://localhost:26657 --from  B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67
+    TotalCount:     7
+    type           hash                                                                  height    index    detail
+    transfer       0x1142188B5FFDD69AB892B47D748406DC4A4C41F7059DDB573639C14DA20701F8    25        0        from: B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67    to:A9963FA874B6B1C94A1401F29630B35298E47F70A2BA65    amount:500000000000000000000000    nonce:2
+    transfer       0x4CC298E26A2E8751CD6E6980C5FBB03EE41DAC6265529514362D94BE6C580F78    27        0        from: B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67    to:407279ABCF7AC8AC37764EBB03BC773CFFE875EA58E5EC    amount:250000000000000000000000    nonce:3
+    transfer       0xEFFDA65DDEF7DDF44DCE34D5883D255FFA24EFD8FA894B7D7C6ACAABEC3228F0    29        1        from: B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67    to:B9FA454F15A3BFA97A5043331CA415B4CCC1555AA03AC5    amount:125000000000000000000000    nonce:4
+    transfer       0x4381EA6E6B3EAA6F07B638391D3347EF03200A8C5FC0DE732142E829A6BDAEEB    31        2        from: B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67    to:A237059A66CE356EC13295CF5DE7F2563B5C7746AF9730    amount:62500000000000000000000     nonce:5
+    transfer       0x7D807E82D45960E6952F2812930896B1C676FCB40509CB6AB0C261D719E42A88    35        5        from: B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67    to:DD70352977F0AB2FF89BDE9497A7BAA6DA8D9264688A5C    amount:10000000000000000000        nonce:6
+    transfer       0xBDB8CE1966F7755D66BC48FA06E3CCB0FABE1F3E2B6EE7D79BE993DD12D4B67F    37        5        from: B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67    to:DD70352977F0AB2FF89BDE9497A7BAA6DA8D9264688A5C    amount:10000000000000000000        nonce:7
+    transfer       0xC8C4340B450213D0969B87DF9DE580BE235C4BAFD69DC34172662653B38614DA    39        10       from: B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67    to:DD70352977F0AB2FF89BDE9497A7BAA6DA8D9264688A5C    amount:10000000000000000000        nonce:8 
     ```
 + unconfirmedtxs     
     ``` 

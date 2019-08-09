@@ -115,24 +115,24 @@ func TestSetStake(t *testing.T) {
 	})
 }
 
-func TestRemoveValidator(t *testing.T) {
-	convey.Convey("test removeValidator", t, func() {
-		ctl := gomock.NewController(t)
-		defer ctl.Finish()
-
-		//mock wallet interface
-		mockWallet := mock_cmd.NewMockWallet(ctl)
-		mockWallet.EXPECT().RemoveValidator("http://localhost","26657", "FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=", adminPrivate).Return(nil)
-
-		rmvPatch := gomonkey.ApplyFunc(wallet.RemoveValidator, mockWallet.RemoveValidator)
-		defer rmvPatch.Reset()
-
-		//start test case
-		args := []string{"admin", "removevalidator", "--pubkey", `FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=`,"--nodeurl", localUrl, "--privkey",
-			adminPrivate}
-		cmd := RootCmd
-		cmd.SetArgs(args)
-		err := cmd.Execute()
-		convey.So(err, convey.ShouldBeNil)
-	})
-}
+//func TestRemoveValidator(t *testing.T) {
+//	convey.Convey("test setStake", t, func() {
+//		ctl := gomock.NewController(t)
+//		defer ctl.Finish()
+//
+//		//mock wallet interface
+//		mockWallet := mock_cmd.NewMockWallet(ctl)
+//		mockWallet.EXPECT().RemoveValidator("http://localhost","26657","FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=", adminPrivate).Return(nil)
+//
+//		//wbPatch := gomonkey.ApplyFunc(wallet.RemoveValidator, mockWallet.RemoveValidator)
+//		wbPatch := gomonkey.ApplyFunc(wallet.RemoveValidator, mockWallet.RemoveValidator)
+//		defer wbPatch.Reset()
+//		//start test case
+//		//args := []string{"admin", "removevalidator", "--pubkey", "FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=","--nodeurl", "http://localhost:26657", "--privkey", adminPrivate}
+//		err := wallet.RemoveValidator("http://localhost","26657","FSyq/mTVPO/WdxMNCMEKiA5UVBFXVL8OAnDspO+buZY=", adminPrivate)
+//		//cmd := RootCmd
+//		//cmd.SetArgs(args)
+//		//err := cmd.Execute()
+//		convey.So(err, convey.ShouldBeNil)
+//	})
+//}
