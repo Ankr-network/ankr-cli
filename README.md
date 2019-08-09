@@ -1,6 +1,9 @@
 # overview
-ankr chain cli is used to interacting with ankr blockchain. It implements accounts operations like generating new account, exporting private key from keystore or otherwise. 
-Admin operations are also provided like send ankr tokens to specified address, etc.sending and querying transactions from ankr chain, etc.
+ankr chain cli is used to interacting with ankr blockchain. It implements accounts operations, admin operations, tranfer operation and query operation.
+Account operations are generating new account, exporting private key from keystore or otherwise, and query target address balance. 
+Admin operations are sending ankr tokens to specified address using admin privatekey, set validator or metering of ankr-chain.
+Transfer operation is used to send different type of transactions.
+Query is used to query different kind of data from ankr-chain.
 
 
 # How to install
