@@ -9,7 +9,6 @@ There are two ways to install ankr chain cli
 1. install ankr-chain-cli using go commands    
 ```$xslt
 go get github.com/Ankr-network/ankr-chain-cli    
-cd $GOPATH/src/github.com/Ankr-network/ankr-chain-cli    
 go install github.com/Ankr-network/ankr-chain-cli    
 ankr-chain-cli <sub-commands/--help>
 ```   
@@ -17,8 +16,8 @@ ankr-chain-cli <sub-commands/--help>
 2. buid from source    
 download and build from the source code  
 ```
-git clone https://github.com/Ankr-network/ankr-chain-cli.git $GOPATH/src/github.com/Ankr-network/ankr-chain-cli    
-cd $GOPATH/src/github.com/Ankr-network/ankr-chain-cli    
+git clone https://github.com/Ankr-network/ankr-chain-cli.git    
+cd ankr-chain-cli    
 go build -o ankr-chain-cli main.go    
 ./ankr-chain-cli <sub-commands/--help>
 ```
@@ -34,7 +33,7 @@ go build -o ankr-chain-cli main.go
      account     account is used to generate new accounts, encrypt privatekey or decrypt privatekey from keystore
      admin       admin is used to do admin operations
      help        Help about any command
-     query       A brief description of your command
+     query       query information from ankr chain
      transaction transaction is used to send coins to specified address or send metering
    
    Flags:
