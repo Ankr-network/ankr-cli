@@ -10,11 +10,19 @@ RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
 RUN chmod go-w /root
 RUN chmod 700 /root/.ssh
 RUN chmod 600 /root/.ssh/id_rsa
+RUN export GO111MODULE=on
 
 WORKDIR $GOPATH/src/github.com/Ankr-network/ankr-cli/
 COPY . $GOPATH/src/github.com/Ankr-network/ankr-cli/
 
-RUN make build
+RUN go mod download
+RUN CGO_ENABLED=0 \
+        GOOS=linux \
+        GOARCH=amd64 \
+        go build -a \
+        -installsuffix cgo \
+        -o /go/bin/ankr-cli \
+        main.go
 
 FROM alpine:3.7
 RUN  apk update && \
