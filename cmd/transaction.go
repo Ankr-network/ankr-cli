@@ -86,7 +86,7 @@ func transfer(cmd *cobra.Command, args []string) {
 	validatorUrl = viper.GetString(txUrlFlag)
 	index := strings.LastIndex(validatorUrl, ":")
 	if index < 0 {
-		fmt.Println("Error: url is not correct, example 'https://chain-01.dccn.ankr.com:443'")
+		fmt.Println("Error: nodeurl is not correct, example 'https://chain-01.dccn.ankr.com:443'")
 		return
 	}
 
@@ -121,7 +121,7 @@ func sendMetering(cmd *cobra.Command, args []string) {
 	validatorUrl = viper.GetString(txUrlFlag)
 	index := strings.LastIndex(validatorUrl, ":")
 	if index < 0 {
-		fmt.Println("Error: url is not correct, example 'https://chain-01.dccn.ankr.com:443'")
+		fmt.Println("Error: nodeurl is not correct, example 'https://chain-01.dccn.ankr.com:443'")
 		return
 	}
 	dc := viper.GetString(meteringDc)

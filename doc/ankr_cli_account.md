@@ -5,7 +5,7 @@ account is used to generate new accounts, encrypt privatekey or decrypt privatek
 ### Sub commands
 
 ```
-  $ ankr-chain-cli account --help
+  PS D:\> ankr-cli account --help
   account is used to generate new accounts, encrypt privatekey or decrypt privatekey from keystore
   
   Usage:
@@ -40,7 +40,7 @@ account is used to generate new accounts, encrypt privatekey or decrypt privatek
     * getbalance query target account balance    
         options:
             -a, --address string <requried> the address of the target account
-                --url string <requried> the url of an ankr chain validator     
+                --nodeurl string <requried> the url of an ankr chain validator     
     * resetpwd reset keystore password.    
         options:
             -f, --file string   the path where keystore file is located.      
@@ -48,7 +48,7 @@ account is used to generate new accounts, encrypt privatekey or decrypt privatek
 ## examples  
 + exportprivatekey     
     ``` 
-    PS D:\> ankr-chain-cli account exportprivatekey -f .\UTC--2019-08-01T02-25-01.685454800Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3
+    PS D:\> ankr-cli account exportprivatekey -f .\UTC--2019-08-01T02-25-01.685454800Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3
     
     Please input the keystore password:
     
@@ -56,7 +56,7 @@ account is used to generate new accounts, encrypt privatekey or decrypt privatek
     ```
 + genaccount     
     ```
-    PS D:\> ankr-chain-cli account genaccount -o ./
+    PS D:\> ankr-cli account genaccount -o ./
     
     generating accounts...
     
@@ -75,7 +75,7 @@ account is used to generate new accounts, encrypt privatekey or decrypt privatek
      ```    
 + genkeystore     
     ``` 
-    PS D:\> ankr-chain-cli account genkeystore -p 1gEcOfgXL/rmMvDJPAyL48CanFTeLMU5yASNA9KXmrEVLKr+ZNU879Z3Ew0IwQqIDlRUEVdUvw
+    PS D:\> ankr-cli account genkeystore -p 1gEcOfgXL/rmMvDJPAyL48CanFTeLMU5yASNA9KXmrEVLKr+ZNU879Z3Ew0IwQqIDlRUEVdUvw
     4CcOyk75u5lg== -o ./
     
     about to export to keystore..
@@ -88,13 +88,13 @@ account is used to generate new accounts, encrypt privatekey or decrypt privatek
     ```   
 + getbalance    
     ```
-     PS D:\> ankr-chain-cli account getbalance --url http://localhost:26657 --address E1403CA0DC201F377E820CFA62117A48D4D6124
+     PS D:\> ankr-cli account getbalance --nodeurl http://localhost:26657 --address E1403CA0DC201F377E820CFA62117A48D4D6124
      00C20D3
      The balance is: 50.000000000000000000
     ```    
 + resetpwd    
     ```
-    PS D:\> ankr-chain-cli account resetpwd -f ./UTC--2019-08-01T02-34-55.230477100Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3
+    PS D:\> ankr-cli account resetpwd -f ./UTC--2019-08-01T02-34-55.230477100Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3
     
     Please input the keystore password:
     please input the keystore encryption password:

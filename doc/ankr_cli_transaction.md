@@ -4,7 +4,7 @@ transaction is used to send coins to specified address or send metering
 ### Sub commands
 
 ```
-PS C:\Users\ankr> ankr-chain-cli transaction --help
+PS D:\> ankr-cli transaction --help
 transaction is used to send coins to specified address or send metering
 
 Usage:
@@ -17,7 +17,7 @@ Available Commands:
 
 Flags:
   -h, --help         help for transaction
-      --url string   the url of a validator
+      --nodeurl string   the url of a validator
 
 Use "ankr_cli transaction [command] --help" for more information about a command.
 ```
@@ -26,7 +26,7 @@ Use "ankr_cli transaction [command] --help" for more information about a command
 
 ```
     global options 
-        --url string       url of a validator 
+        --nodeurl string       url of a validator 
     * metering, send metering transaction.  
         options: 
             --dcname string      data center name
@@ -43,12 +43,12 @@ Use "ankr_cli transaction [command] --help" for more information about a command
 ### example    
 + metering  
     ```
-    PS D:\> ankr-chain-cli transaction metering --url http://localhost:26657 --dcname datacenter_name --namespace test --value test-value --privkey privkey
+    PS D:\> ankr-cli transaction metering --nodeurl http://localhost:26657 --dcname datacenter_name --namespace test --value test-value --privkey privkey
     Set metering success.
     ```  
 + transfer    
     ```
-    PS D:\> ankr-chain-cli transaction transfer --to F4656949BD747057A59DDF90A218EC352E3916A096924D --amount 20000000000000000000 --keystore .\UTC--2019-08-01T02-25-01.685454800Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3 --url http://localhost:26657
+    PS D:\> ankr-cli transaction transfer --to F4656949BD747057A59DDF90A218EC352E3916A096924D --amount 20000000000000000000 --keystore .\UTC--2019-08-01T02-25-01.685454800Z--E1403CA0DC201F377E820CFA62117A48D4D612400C20D3 --nodeurl http://localhost:26657
     
     Please input the keystore password:
     

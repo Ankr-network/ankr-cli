@@ -4,7 +4,7 @@ query information from ankr chain
 ### Sub commands
 
 ```
-  PS C:\Users\ankr> ankr-chain-cli query
+  PS D:\> ankr-cli query
   query information from ankr chain
   
   Usage:
@@ -23,14 +23,14 @@ query information from ankr chain
   
   Flags:
     -h, --help         help for query
-        --url string   validator url
+        --nodeurl string   validator url
   
   Use "ankr_cli query [command] --help" for more information about a command.
 ```
 
 ### usage  
     global options 
-        --url string       url of a validator 
+        --nodeurl string       url of a validator 
     * block,  Get block at a given height. If no height is provided, it will fetch the latest block. And you can use "detail" to show more information about transactions contained in block.  
         options: 
             --height int   height interval of the blocks to query. integer or block interval formatted as [from:to] are accepted 
@@ -72,7 +72,7 @@ query information from ankr chain
 ### example  
 + block     
     ``` 
-    PS D:\> ankr-chain-cli query block --url http://localhost:26657 --height 631 detail
+    PS D:\> ankr-cli query block --nodeurl http://localhost:26657 --height 631 detail
     
     Block info:
     Version: {10 1}
@@ -111,7 +111,7 @@ query information from ankr chain
     ```
 + consensusstate     
     ``` 
-    PS D:\> ankr-chain-cli query consensusstate --url http://localhost:26657
+    PS D:\> ankr-cli query consensusstate --nodeurl http://localhost:26657
     {
         "round_state": {
             "height/round/step": "117983/0/1",
@@ -137,7 +137,7 @@ query information from ankr chain
     ```
 + dumpconsensusstate     
     ``` 
-    PS D:\> ankr-chain-cli query consensusstate --url http://localhost:26657
+    PS D:\> ankr-cli query consensusstate --nodeurl http://localhost:26657
     {
         "round_state": {
             "height/round/step": "118015/0/1",
@@ -163,7 +163,7 @@ query information from ankr chain
     ```
 + genesis     
     ``` 
-    PS D:\> ankr-chain-cli query genesis --url http://localhost:26657
+    PS D:\> ankr-cli query genesis --nodeurl http://localhost:26657
     Genesis:{
         "genesis_time": 2019-07-24 10:44:03.9174995 +0000 UTC
         "chain_id": test-chain-0bOrck
@@ -190,7 +190,7 @@ query information from ankr chain
     ```
 + numunconfirmedtxs     
     ``` 
-    PS D:\> ankr-chain-cli query numunconfirmedtxs --url http://localhost:26657
+    PS D:\> ankr-cli query numunconfirmedtxs --nodeurl http://localhost:26657
     n_tx: 0
     total: 0
     total_bytes: 0
@@ -199,7 +199,7 @@ query information from ankr chain
     ```
 + status     
     ``` 
-    PS D:\> ankr-chain-cli query status --url http://localhost:26657
+    PS D:\> ankr-cli query status --nodeurl http://localhost:26657
     node_info:{
         "protocol_version": {
             "p2p": 7,
@@ -232,12 +232,12 @@ query information from ankr chain
     ```
 + transaction     
     ``` 
-    PS D:\> ankr-chain-cli query transaction --url http://localhost:26657 --txid 0x72fb3fa4735e2de3e56ab50a5d2ddcdbd019012b34a226dce0b7a3d2e13bddeb
+    PS D:\> ankr-cli query transaction --nodeurl http://localhost:26657 --txid 0x72fb3fa4735e2de3e56ab50a5d2ddcdbd019012b34a226dce0b7a3d2e13bddeb
     tx type        hash                                                                  block height    block index    detail
     set balance    0x72FB3FA4735E2DE3E56AB50A5D2DDCDBD019012B34A226DCE0B7A3D2E13BDDEB    85403           0              address:95CD00025C3807CEE9804D19B1E410A30A47B303371C12    amount:12000000000000000000
     ```
     ```
-    PS D:\> ankr-chain-cli query transaction --type Send --nodeurl http://localhost:26657 --from  B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67
+    PS D:\> ankr-cli query transaction --type Send --nodeurl http://localhost:26657 --from  B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67
     TotalCount:     7
     type           hash                                                                  height    index    detail
     transfer       0x1142188B5FFDD69AB892B47D748406DC4A4C41F7059DDB573639C14DA20701F8    25        0        from: B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67    to:A9963FA874B6B1C94A1401F29630B35298E47F70A2BA65    amount:500000000000000000000000    nonce:2
@@ -250,7 +250,7 @@ query information from ankr chain
     ```
 + unconfirmedtxs     
     ``` 
-   PS D:\> ankr-chain-cli query unconfirmedtxs --url http://localhost:26657
+   PS D:\> ankr-cli query unconfirmedtxs --nodeurl http://localhost:26657
    n_tx: 0
    total: 0
    total_bytes: 0
@@ -259,7 +259,7 @@ query information from ankr chain
     ```
 + validators
     ```
-     PS D:\> ankr-chain-cli query validators --url http://localhost:26657
+     PS D:\> ankr-cli query validators --nodeurl http://localhost:26657
      Height:118491
      
      Validators information:

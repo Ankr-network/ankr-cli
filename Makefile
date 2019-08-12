@@ -12,21 +12,21 @@ build = CGO_ENABLED=0 \
 
 build_win: GOOS=windows
 build_win: GOARCH=amd64
-build_win: GOEXE=ankr-chain-cli_$(GOOS)_$(GOARCH).exe
+build_win: GOEXE=ankr-cli_$(GOOS)_$(GOARCH).exe
 build_win:
 	@echo "Building win executable"
 	@$(build)
 
 build_mac: GOOS=darwin
 build_mac: GOARCH=amd64
-build_mac: GOEXE=ankr-chain-cli_$(GOOS)_$(GOARCH)
+build_mac: GOEXE=ankr-cli_$(GOOS)_$(GOARCH)
 build_mac:
 	@echo "Building mac executable"
 	@$(build)
 
 build_lin: GOOS=linux
 build_lin: GOARCH=amd64
-build_lin: GOEXE=ankr-chain-cli_$(GOOS)_$(GOARCH)
+build_lin: GOEXE=ankr-cli_$(GOOS)_$(GOARCH)
 build_lin:
 	@echo "Building linux executable"
 	@$(build)
