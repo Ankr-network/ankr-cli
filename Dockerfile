@@ -12,8 +12,8 @@ RUN chmod 700 /root/.ssh
 RUN chmod 600 /root/.ssh/id_rsa
 RUN export GO111MODULE=on
 
-WORKDIR $GOPATH/src/github.com/Ankr-network/ankr-cli/
-COPY . $GOPATH/src/github.com/Ankr-network/ankr-cli/
+WORKDIR /ankr-cli
+COPY . .
 
 RUN make build
 
