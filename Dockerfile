@@ -15,7 +15,16 @@ RUN export GO111MODULE=on
 WORKDIR /ankr-cli
 COPY . .
 
-RUN make build
+RUN ls
+RUN go mod download
+#RUN make build
+RUN CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    go build -a \
+    -installsuffix cgo \
+    -o /go/bin/ankr-cli \
+    main.go
 
 FROM alpine:3.7
 RUN  apk update && \
