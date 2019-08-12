@@ -12,6 +12,7 @@ RUN chmod 600 /root/.ssh/id_rsa
 
 WORKDIR $GOPATH/src/github.com/Ankr-network/ankr-cli/
 COPY . $GOPATH/src/github.com/Ankr-network/ankr-cli/
+RUN export GO111MODULE=on
 
 RUN CGO_ENABLED=0 \
     GOOS=linux \
