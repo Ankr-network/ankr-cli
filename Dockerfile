@@ -2,7 +2,8 @@ FROM golang:1.10-alpine3.8 as builder
 RUN apk update && \
     apk add git && \
     apk add --update bash && \
-    apk add openssh
+    apk add openssh && \
+    apk add make
 
 COPY id_rsa /root/.ssh/
 RUN ssh-keyscan github.com >> ~/.ssh/known_hosts
