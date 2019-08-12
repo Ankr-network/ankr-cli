@@ -15,17 +15,10 @@ RUN export GO111MODULE=on
 WORKDIR $GOPATH/src/github.com/Ankr-network/ankr-cli/
 COPY . $GOPATH/src/github.com/Ankr-network/ankr-cli/
 
-RUN go mod download
-RUN CGO_ENABLED=0 \
-        GOOS=linux \
-        GOARCH=amd64 \
-        go build -a \
-        -installsuffix cgo \
-        -o /go/bin/ankr-cli \
-        main.go
+RUN make build
 
 FROM alpine:3.7
 RUN  apk update && \
      apk add libc6-compat && \
      apk add ca-certificates
-COPY --from=builder /go/bin/ankr-cli /bin/ankr-cli
+COPY --from=builder ./build/ankr-cli_amd64 /bin/ankr-cli
