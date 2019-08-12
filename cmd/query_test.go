@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Ankr-network/ankr-cli/mock_cmd"
 	"github.com/agiledragon/gomonkey"
 	"github.com/golang/mock/gomock"
 	"github.com/smartystreets/goconvey/convey"
@@ -238,14 +237,19 @@ func TestTxSearch(t *testing.T) {
 		err = jsonCl.Codec().UnmarshalJSON(response.Result, txSearchR1)
 		err = json.Unmarshal([]byte(txSearchResultMoreCondition), response)
 		err = jsonCl.Codec().UnmarshalJSON(response.Result, txSearchR2)
-		mockClient := mock_cmd.NewMockClient(ctl)
-		//var cl = &client.HTTP{}
-		gomock.InOrder(
-			mockClient.EXPECT().TxSearch(gomock.Any(),"app.type='Send'",false,1,10).Return(txSearchR1, nil),
-			mockClient.EXPECT().TxSearch(gomock.Any(),"app.type='Send' and app.fromaddress='B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67'",false,1,10).Return(txSearchR2, nil),
-			)
+
 		var cl = &client.HTTP{}
-		patch := gomonkey.ApplyMethod(reflect.TypeOf(cl),"TxSearch", mockClient.TxSearch)
+		patch := gomonkey.ApplyMethod(reflect.TypeOf(cl),"TxSearch", func(c *client.HTTP, query string, prove bool, page, perPage int) (*core_types.ResultTxSearch, error){
+			return txSearchR1, nil
+		})
+		defer patch.Reset()
+
+		patch2 := gomonkey.ApplyMethod(reflect.TypeOf(cl),"TxSearch", func(c *client.HTTP, query string, prove bool, page, perPage int) (*core_types.ResultTxSearch, error){
+			return txSearchR1, nil
+		})
+		defer patch2.Reset()
+
+
 		defer patch.Reset()
 		args1 := []string{"query", "transaction", "--nodeurl", localUrl, "--type","Send", "--perpage", "10"}
 		args2 := []string{"query", "transaction", "--nodeurl", localUrl, "--type","Send", "--perpage", "10", "--from", "B508ED0D54597D516A680E7951F18CAD24C7EC9FCFCD67"}
