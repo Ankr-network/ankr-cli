@@ -6,7 +6,7 @@ jobs:
   build:
     docker:
       # Build in Go base container
-      - image: circleci/golang:1.10
+      - image: circleci/golang:1.19
     working_directory: /go/src/github.com/Ankr-network/ankr-cli
     steps:
       - checkout
