@@ -39,7 +39,7 @@ func TestQueryBlock(t *testing.T) {
 			return blockResult, nil
 		})
 		defer clPatch.Reset()
-		args := []string{"query", "block", "--nodeurl", localUrl, "--height", "63" }
+		args := []string{"query", "block", "--nodeurl", localUrl, "--height", "63", "detail" }
 		cmd := RootCmd
 		cmd.SetArgs(args)
 		err = cmd.Execute()

@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/rpc/client"
 	core_types "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
@@ -33,6 +34,10 @@ import (
 	"text/tabwriter"
 )
 
+const (
+	defaultPerPage = 20
+	maxPerPage     = 50
+)
 
 var(
 	//flags used by query sub commands
@@ -54,6 +59,8 @@ var(
 
 	//bind block flags
 	blockHeight = "blockHeight"
+	blockPage = "blockPage"
+	blockPerPage ="blockPerPage"
 	validatorHeight = "validatorHeight"
 	unconfirmedTxLimit = "unconfirmedTxLimit"
 
@@ -425,6 +432,7 @@ func queryBlock(cmd *cobra.Command, args []string)  {
 		return
 	}
 
+	resps := make([]*core_types.ResultBlock,0, to - from + 1)
 	for iter := from; iter <= to; iter ++ {
 		heightInt := int64(iter)
 		heightP := &heightInt
@@ -436,12 +444,49 @@ func queryBlock(cmd *cobra.Command, args []string)  {
 			fmt.Println("Query block failed.", err)
 			return
 		}
-		detail := false
-		if len(args) > 0 && args[0] == "detail"{
-			detail = true
-		}
-		outPutBlockResp(resp, detail)
+		resps = append(resps, resp)
 	}
+
+	detail := false
+	if len(args) > 0 && args[0] == "detail"{
+		detail = true
+	}
+	page := viper.GetInt(blockPage)
+	perPage := viper.GetInt(perPageFlag)
+	outPutBlockResp(resps, page, perPage, detail)
+}
+
+func validatePage(page, perPage, totalCount int) int {
+	if perPage < 1 {
+		return 1
+	}
+
+	pages := ((totalCount - 1) / perPage) + 1
+	if page < 1 {
+		page = 1
+	} else if page > pages {
+		page = pages
+	}
+
+	return page
+}
+
+func validatePerPage(perPage int) int {
+	if perPage < 1 {
+		return defaultPerPage
+	} else if perPage > maxPerPage {
+		return maxPerPage
+	}
+	return perPage
+}
+
+func validateSkipCount(page, perPage int) int {
+	skipCount := (page - 1) * perPage
+	if skipCount < 0 {
+		return 0
+	}
+
+	return skipCount
 }
 
 func getBlockInterval() (from int, to int,err  error) {
@@ -487,18 +532,28 @@ func getBlockInterval() (from int, to int,err  error) {
 	return from, to, nil
 }
 
-func outPutBlockResp(resp *core_types.ResultBlock, detail bool)  {
+func outPutBlockResp(resps []*core_types.ResultBlock,page int, perPage int, detail bool)  {
 	w := newTabWriter(os.Stdout)
-	fmt.Fprintf(w, "\nBlock info:\n")
-	outPutHeader(w, resp.Block.Header)
-	fmt.Fprintf(w, "\nTransactions contained in block: \n")
-	if resp.Block.Txs == nil || len(resp.Block.Txs) == 0 {
-		fmt.Fprintf(w, "[]\n")
-	}else{
-		if detail {
-			outPutTransactions(w, resp.Block.Txs)
-		}else {
-			outPutTransactionsSimple(w, resp.Block.Txs)
+	totalCount := len(resps)
+	page = validatePage(page, perPage, totalCount)
+	perPage = validatePerPage(perPage)
+	skipCount := validateSkipCount(page, perPage)
+	resultLength := common.MinInt(perPage, totalCount - skipCount)
+
+	fmt.Fprintf(w, "\nTotal ount:%d\n", totalCount)
+	for i := 0; i < resultLength; i ++{
+		resp := resps[i + skipCount]
+		fmt.Fprintf(w, "\nBlock info:\n")
+		outPutHeader(w, resp.Block.Header)
+		fmt.Fprintf(w, "\nTransactions contained in block: \n")
+		if resp.Block.Txs == nil || len(resp.Block.Txs) == 0 {
+			fmt.Fprintf(w, "[]\n")
+		}else{
+			if detail {
+				outPutTransactions(w, resp.Block.Txs)
+			}else {
+				outPutTransactionsSimple(w, resp.Block.Txs)
+			}
 		}
 	}
 	w.Flush()
@@ -506,6 +561,14 @@ func outPutBlockResp(resp *core_types.ResultBlock, detail bool)  {
 
 func addQueryBlockFlags(cmd *cobra.Command)  {
 	err := addStringFlag(cmd, blockHeight, heightFlag, "", "", "height interval of the blocks to query. integer or block interval formatted as [from:to] are accepted ", "" )
+	if err != nil {
+		panic(err)
+	}
+	err = addIntFlag(cmd, blockPage, pageFlag, "", 1, "Page number (1 based)", "")
+	if err != nil {
+		panic(err)
+	}
+	err = addIntFlag(cmd, blockPerPage, perPageFlag, "", 20, "Page number (1 based)", "")
 	if err != nil {
 		panic(err)
 	}
