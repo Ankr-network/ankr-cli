@@ -15,7 +15,6 @@ RUN export GO111MODULE=on
 WORKDIR /ankr-cli
 COPY . .
 
-RUN ls
 RUN go mod download
 #RUN make build
 RUN CGO_ENABLED=0 \
@@ -30,4 +29,4 @@ FROM alpine:3.7
 RUN  apk update && \
      apk add libc6-compat && \
      apk add ca-certificates
-COPY --from=builder ./build/ankr-cli_amd64 /bin/ankr-cli
+COPY --from=builder /go/bin/ankr-cli /bin/ankr-cli
