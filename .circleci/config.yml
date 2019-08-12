@@ -27,11 +27,11 @@ jobs:
       - run:
           name: Login to AWS ECR
           command: eval $(aws ecr get-login --no-include-email --region $AWS_REGION)
-      - run:
-          name: download dep
-          command: |
-            export GO111MODULE=on
-            go mod download
+#      - run:
+#          name: download dep
+#          command: |
+#            export GO111MODULE=on
+#            go mod download
       - run:
           name: "Test, Build & Push Docker Image"
           command: |
@@ -54,6 +54,7 @@ jobs:
       - run: go get github.com/mitchellh/gox
       - run: go get -u github.com/tcnksm/ghr
       - run: go get -u github.com/stevenmatthewt/semantics
+      - run: go mod download
       - run:
           name: cross compile
           command: |
