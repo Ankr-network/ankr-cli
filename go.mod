@@ -1,4 +1,4 @@
-module github.com/Ankr-network/ankr-chain-cli
+module github.com/Ankr-network/ankr-cli
 
 go 1.12
 

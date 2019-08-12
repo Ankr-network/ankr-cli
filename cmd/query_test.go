@@ -3,7 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Ankr-network/ankr-chain-cli/mock_cmd"
+	"github.com/Ankr-network/ankr-cli/mock_cmd"
 	"github.com/agiledragon/gomonkey"
 	"github.com/golang/mock/gomock"
 	"github.com/smartystreets/goconvey/convey"
