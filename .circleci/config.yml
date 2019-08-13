@@ -13,7 +13,7 @@ jobs:
       - setup_remote_docker
       - add_ssh_keys:
           fingerprints:
-            - "91:de:2e:da:16:ab:18:de:71:0f:e2:bf:5f:44:5c:55"
+            - "d8:cc:80:26:dd:5e:03:39:ae:52:19:dd:06:54:00:12"
       - run:
           name: Copy ssh key in the circleci build context
           command: |
@@ -27,11 +27,6 @@ jobs:
       - run:
           name: Login to AWS ECR
           command: eval $(aws ecr get-login --no-include-email --region $AWS_REGION)
-#      - run:
-#          name: download dep
-#          command: |
-#            export GO111MODULE=on
-#            go mod download
       - run:
           name: "Test, Build & Push Docker Image"
           command: |
@@ -51,16 +46,19 @@ jobs:
             export URL_BRANCH
 
             docker build --label=ankr-cli -t ankr-cli:$BRANCH_NAME .
-      - run: go get github.com/mitchellh/gox
-      - run: go get -u github.com/tcnksm/ghr
-      - run: go get -u github.com/stevenmatthewt/semantics
+      - run:
+          name: get dependency tools
+          command: |
+            go get github.com/mitchellh/gox
+            go get -u github.com/tcnksm/ghr
+            go get -u github.com/stevenmatthewt/semantics
       - run:
           name: cross compile
           command: |
             export GO111MODULE=on
             go mod download
             gox -os="linux darwin windows" -arch="amd64" -output="dist/ankr-cli_{{.OS}}_{{.Arch}}"
-            cd dist/ && gzip * 
+            cd dist/ && gzip *
       - run:
           name: create release
           command: |
