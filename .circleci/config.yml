@@ -65,7 +65,6 @@ jobs:
             tag=$(semantics --output-tag)
             BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
             if [ "$BRANCH_NAME" = "master" ]; then
-#              tag=$(semantics --output-tag)
               if [ "$tag" ]; then
                 ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag dist/
               else
