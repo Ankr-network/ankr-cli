@@ -59,14 +59,18 @@ jobs:
           command: |
             export GO111MODULE=on
             go mod download
-            gox -os="linux darwin windows" -arch="amd64" -output="dist/spotifycli_{{.OS}}_{{.Arch}}"
-            cd dist/ && gzip *
+            gox -os="linux darwin windows" -arch="amd64" -output="dist/ankr-cli_{{.OS}}_{{.Arch}}"
+            cd dist/ && gzip * && ls
       - run:
           name: create release
           command: |
-            tag=$(semantics --output-tag)
-            if [ "$tag" ]; then
-              ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag dist/
-            else
-              echo "The commit message(s) did not indicate a major/minor/patch version."
+            echo "$BRANCH_NAME"
+            echo [ "$BRANCH_NAME" = "feat" ]
+            if [ "$BRANCH_NAME" = "master" ]; then
+              tag=$(semantics --output-tag)
+              if [ "$tag" ]; then
+                ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag dist/
+              else
+                echo "The commit message(s) did not indicate a major/minor/patch version."
+              fi
             fi
