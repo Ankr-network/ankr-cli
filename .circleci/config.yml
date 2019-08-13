@@ -68,7 +68,6 @@ jobs:
             else
               echo "The commit message(s) did not indicate a major/minor/patch version."
             fi
-
 #            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
 #            if [ "$BRANCH_NAME" = "master" ]; then
 #              tag=$(semantics --output-tag)
