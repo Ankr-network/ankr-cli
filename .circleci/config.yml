@@ -54,10 +54,11 @@ jobs:
       - run: go get github.com/mitchellh/gox
       - run: go get -u github.com/tcnksm/ghr
       - run: go get -u github.com/stevenmatthewt/semantics
-      - run: go mod download
       - run:
           name: cross compile
           command: |
+            export GO111MODULE=on
+            go mod download
             gox -os="linux darwin windows" -arch="amd64" -output="dist/spotifycli_{{.OS}}_{{.Arch}}"
             cd dist/ && gzip *
       - run:
