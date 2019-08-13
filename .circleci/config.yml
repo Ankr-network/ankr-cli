@@ -13,7 +13,7 @@ jobs:
       - setup_remote_docker
       - add_ssh_keys:
           fingerprints:
-            - "d8:cc:80:26:dd:5e:03:39:ae:52:19:dd:06:54:00:12"
+            - "41:4c:87:39:32:93:86:70:e5:1b:61:80:b6:c4:41:c7	"
       - run:
           name: Copy ssh key in the circleci build context
           command: |
@@ -62,12 +62,19 @@ jobs:
       - run:
           name: create release
           command: |
-            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-            if [ "$BRANCH_NAME" = "master" ]; then
-              tag=$(semantics --output-tag)
-              if [ "$tag" ]; then
-                ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag dist/
-              else
-                echo "The commit message(s) did not indicate a major/minor/patch version."
-              fi
+            tag=$(semantics --output-tag)
+            if [ "$tag" ]; then
+              ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag dist/
+            else
+              echo "The commit message(s) did not indicate a major/minor/patch version."
             fi
+
+#            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+#            if [ "$BRANCH_NAME" = "master" ]; then
+#              tag=$(semantics --output-tag)
+#              if [ "$tag" ]; then
+#                ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag dist/
+#              else
+#                echo "The commit message(s) did not indicate a major/minor/patch version."
+#              fi
+#            fi
