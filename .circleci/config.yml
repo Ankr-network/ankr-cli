@@ -64,8 +64,9 @@ jobs:
       - run:
           name: create release
           command: |
+            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
             echo "$BRANCH_NAME"
-            echo [ "$BRANCH_NAME" = "feat" ]
+            echo [ "$BRANCH_NAME" = "feature" ]
             if [ "$BRANCH_NAME" = "master" ]; then
               tag=$(semantics --output-tag)
               if [ "$tag" ]; then
