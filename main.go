@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Ankr-network/ankr-chain-cli/cmd"
+	"github.com/Ankr-network/ankr-cli/cmd"
 )
 
 func main()  {

@@ -1,13 +1,17 @@
 package cmd
 
 import (
-	"github.com/Ankr-network/ankr-chain-cli/mock_cmd"
+	"fmt"
+	"github.com/Ankr-network/ankr-cli/mock_cmd"
 	"github.com/Ankr-network/dccn-common/wallet"
 	"github.com/agiledragon/gomonkey"
 	"github.com/golang/mock/gomock"
 	"github.com/smartystreets/goconvey/convey"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
+	"os"
+	"path"
+	"strings"
 	"syscall"
 	"testing"
 )
@@ -55,6 +59,7 @@ func TestGenAccount(t *testing.T) {
 		cmd.SetArgs(args)
 		err := cmd.Execute()
 		convey.So(err, convey.ShouldBeNil)
+		removeKeyStore("./tmp", address)
 	})
 }
 
@@ -105,4 +110,23 @@ func TestResetPWD(t *testing.T) {
 		err := cmd.Execute()
 		convey.So(err, convey.ShouldBeNil)
 	})
+}
+
+//help functions
+func removeKeyStore(dir string, address string)  {
+	_files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	for _, file := range  _files {
+		if !file.IsDir(){
+			if strings.HasSuffix(file.Name(), address) {
+				err = os.Remove(path.Join(dir, file.Name()))
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+		}
+	}
 }

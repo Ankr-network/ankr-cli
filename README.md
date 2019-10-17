@@ -7,8 +7,9 @@ Query is used to query different kind of data from ankr-chain.
 
 
 # How to install
-ankr-cli is wriitten in Go with support for multiple platforms.   
-There are two ways to install ankr chain cli    
+ankr-cli is written in Go with support for multiple platforms.   
+There are two ways to install ankr-cli, both of them depends on the `go mod` tool, make sure you have already enabled go module before installing ankr-cli.  
+Open a terminal and type `export GO111MODULE=on`  to activate go module 
 1. install ankr-cli using go commands    
 ```$xslt
 go get github.com/Ankr-network/ankr-cli    
