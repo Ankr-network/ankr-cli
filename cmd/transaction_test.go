@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/Ankr-network/ankr-chain-cli/mock_cmd"
+	"github.com/Ankr-network/ankr-cli/mock_cmd"
 	"github.com/Ankr-network/dccn-common/wallet"
 	"github.com/agiledragon/gomonkey"
 	"github.com/golang/mock/gomock"

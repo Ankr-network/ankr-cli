@@ -1,0 +1,71 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+      # Build in Go base container
+      - image: circleci/golang:1.12
+    working_directory: /go/src/github.com/Ankr-network/ankr-cli
+    steps:
+      - checkout
+      - setup_remote_docker
+      - add_ssh_keys
+      - run:
+          name: Copy ssh key in the circleci build context
+          command: |
+            cp ${HOME}/.ssh/id_rsa id_rsa
+      - run:
+          name: Install AWSCLI
+          command: |
+            curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+            unzip awscli-bundle.zip
+            sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
+      - run:
+          name: Login to AWS ECR
+          command: eval $(aws ecr get-login --no-include-email --region $AWS_REGION)
+      - run:
+          name: "Test, Build & Push Docker Image"
+          command: |
+            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+            SHA1_SHORT=$(git rev-parse --short HEAD)
+            DATE=`date +%Y%m%d%H%M%S`
+            URL_BRANCH=""
+            if [[ ($BRANCH_NAME == "master") ]]
+            then
+              BRANCH_NAME="stage"
+            elif [[ ($BRANCH_NAME == "develop") ]]
+            then
+              BRANCH_NAME="dev"
+            else
+              BRANCH_NAME="feat"
+            fi
+            export URL_BRANCH
+
+            docker build --label=ankr-cli -t ankr-cli:$BRANCH_NAME .
+      - run:
+          name: get dependency tools
+          command: |
+            go get github.com/mitchellh/gox
+            go get -u github.com/tcnksm/ghr
+            go get -u github.com/stevenmatthewt/semantics
+      - run:
+          name: cross compile
+          command: |
+            export GO111MODULE=on
+            go mod download
+            gox -os="linux darwin windows" -arch="amd64" -output="dist/ankr-cli_{{.OS}}_{{.Arch}}"
+            cd dist/ && gzip *
+      - run:
+          name: create release
+          command: |
+            BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+            if [ "$BRANCH_NAME" = "master" ]; then
+              tag=$(semantics --output-tag)
+              if [ "$tag" ]; then
+                ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag dist/
+              else
+                echo "The commit message(s) did not indicate a major/minor/patch version."
+              fi
+            fi
