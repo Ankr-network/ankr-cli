@@ -6,19 +6,23 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Ankr-network/ankr-chain/crypto"
+
+	//"github.com/Ankr-network/ankr-chain/crypto"
+	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"golang.org/x/crypto/pbkdf2"
+	"golang.org/x/crypto/scrypt"
+	"golang.org/x/crypto/sha3"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
-	"github.com/Ankr-network/dccn-common/wallet"
-	"github.com/spf13/viper"
-	"golang.org/x/crypto/pbkdf2"
-	"golang.org/x/crypto/scrypt"
-	"golang.org/x/crypto/sha3"
 )
 
 const (
@@ -44,6 +48,7 @@ const (
 	scryptDKLen = 32
 
 	keyJSONVersion = 3
+
 )
 
 type CryptoJSON struct {
@@ -62,7 +67,6 @@ type cipherparamsJSON struct {
 type EncryptedKeyJSONV3 struct {
 	Name           string     `json:"name,omitempty"`
 	Address        string     `json:"address"`
-	PublicKey      string     `json:"publickey"`
 	Crypto         CryptoJSON `json:"crypto"`
 	KeyJSONVersion int        `json:"version"`
 }
@@ -238,18 +242,29 @@ func toISO8601(t time.Time) string {
 		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), tz)
 }
 
-func getAccountFromPrivatekey(privKey string) (Account, error) {
-	pubKey, err := wallet.GetPublicKeyByPrivateKey(privKey)
-	var acc Account
-	if err != nil {
-		return acc, err
-	}
-	address, err := wallet.GetAddressByPublicKey(pubKey)
-	if err != nil {
-		return acc, err
-	}
+func generateAccount() Account {
+	priv, addr := GenAccount()
+	return Account{priv, addr}
+}
 
-	return Account{privKey, pubKey, address}, nil
+func GenAccount() (priv, addr string) {
+	key := ed25519.GenPrivKey()
+	privArray := [64]byte(key)
+	privBytes := privArray[:]
+	privB64 := base64.StdEncoding.EncodeToString(privBytes)
+	priv = string(privB64)
+	addr = fmt.Sprintf("%X", key.PubKey().Address())
+	return
+}
+
+func getAccountFromPrivatekey(privKey string) (Account, error) {
+	key := crypto.NewSecretKeyEd25519(privKey)
+	addr, err := key.Address()
+	if err != nil {
+		return Account{}, err
+	}
+	addrStr := fmt.Sprintf("%X", addr)
+	return Account{privKey, addrStr}, nil
 }
 
 func writePrivateKey(acc Account) error {

@@ -1,31 +1,15 @@
-/*
-Copyright © 2019 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Ankr-network/dccn-common/wallet"
+	"github.com/Ankr-network/ankr-chain/common"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"os"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -42,7 +26,10 @@ var (
 	genAccNumber   = "genAccNumber"
 	genAccOutput   = "agenAccOutput"
 	getUrl         = "getUrl"
+	getAccUrl      = "getAccUrl"
+	getSymbol      = "getSymbol"
 	getAddress     = "getAddress"
+	getAccAddress  = "getAccAddress"
 	genkeyPrivkey  = "genkeyPrivkey"
 	genkeyOutput   = "genkeyOutput"
 	exportKeystore = "exportKeystore"
@@ -55,6 +42,7 @@ func init() {
 	appendSubCmd(accountCmd, "getbalance", "get the balance of an address.", getBalance, addGetBalanceFlags)
 	appendSubCmd(accountCmd, "exportprivatekey", "recover private key from keystore.", exportPrivatekey, addExportFlags)
 	appendSubCmd(accountCmd,"resetpwd", "reset keystore password.", resetPwd, addResetPWDFlags)
+	appendSubCmd(accountCmd, "queryaccount", "query account info",queryAccount, addQueryAccountFlags)
 }
 
 type ExeCmd struct {
@@ -67,20 +55,19 @@ type ExeCmd struct {
 
 type Account struct {
 	PrivateKey string `json:"private_key"`
-	PublicKey  string `json:"public_key"`
 	Address    string `json:"address"`
 }
 
 //account genaccount functions
 func addGenAccountFlags(cmd *cobra.Command) {
-	err := addIntFlag(cmd, genAccNumber, numberAccountFlag, "n", 1, "number of accounts to be generated", "")
+	err := addIntFlag(cmd, genAccNumber, numberAccountParam, "n", 1, "number of accounts to be generated", notRequired)
 	if err != nil {
 		panic(err)
 	}
 	//genAccountCmd.Flags().IntP(numberAccountFlag, "n", 1, "number of accounts to be generated")
 	//viper.BindPFlag(numberAccountFlag, genAccountCmd.Flags().Lookup(numberAccountFlag))
 
-	err = addStringFlag(cmd, genAccOutput, outputFlag, "o", "", "output account to file", "")
+	err = addStringFlag(cmd, genAccOutput, outputParam, "o", "", "output account to file", notRequired)
 	if err != nil {
 		panic(err)
 	}
@@ -97,18 +84,17 @@ func generateAccounts(cmd *cobra.Command, args []string) {
 		acc := generateAccount()
 		s := fmt.Sprintf("\nAccount_%d", i)
 		fmt.Println(s)
-		fmt.Println("private key: ", acc.PrivateKey, "\npublic key: ", acc.PublicKey, "\naddress: ", acc.Address)
+		fmt.Println("private key: ", acc.PrivateKey, "\naddress: ", acc.Address)
 		path := viper.GetString(genAccOutput)
 		if path == "" {
 			path = configHome()
 		}
-		generateKeystore(acc, path)
+		err := generateKeystore(acc, path)
+		if err != nil {
+			//fmt.Println(err)
+			return
+		}
 	}
-}
-
-func generateAccount() Account {
-	priv, pub, addr := wallet.GenerateKeys()
-	return Account{priv, pub, addr}
 }
 
 //generate keystore based account and password
@@ -142,7 +128,6 @@ InputPassword:
 
 	encryptedKeyJSONV3 := EncryptedKeyJSONV3{
 		Address:        acc.Address,
-		PublicKey:      acc.PublicKey,
 		Crypto:         cryptoStruct,
 		KeyJSONVersion: keyJSONVersion,
 	}
@@ -172,11 +157,11 @@ InputPassword:
 
 //genkeystore functions
 func addGenkeystoreFlags(cmd *cobra.Command) {
-	err := addStringFlag(cmd, genkeyPrivkey, privkeyFlag, "p", "", "private key of an account.", required)
+	err := addStringFlag(cmd, genkeyPrivkey, privkeyParam, "p", "", "private key of an account.", required)
 	if err != nil {
 		panic(err)
 	}
-	err = addStringFlag(cmd, genkeyOutput, outputFlag, "o", "", "output file path.", "")
+	err = addStringFlag(cmd, genkeyOutput, outputParam, "o", "", "output file path.", notRequired)
 	if err != nil {
 		panic(err)
 	}
@@ -206,45 +191,36 @@ func genKeystore(cmd *cobra.Command, args []string) {
 
 //get balance functions
 func addGetBalanceFlags(cmd *cobra.Command) {
-	err := addStringFlag(cmd, getAddress, addressFlag, "a", "", "the address of an account.", required)
+	err := addStringFlag(cmd, getAddress, addressParam, "a", "", "the address of an account.", required)
 	if err != nil {
 		panic(err)
 	}
-	err = addStringFlag(cmd, getUrl, urlFlag, "", "", "the url with an endpoint of an ankr chain validator.", required)
+	err = addStringFlag(cmd, getUrl, urlParam, "", "", "the url with an endpoint of an ankr chain validator.", required)
+	if err != nil {
+		panic(err)
+	}
+	err = addStringFlag(cmd, getSymbol, symbolParam, "", "ANKR", "token symbol", notRequired)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func getBalance(cmd *cobra.Command, args []string) {
-	httpsUrl := viper.GetString(getUrl)
-	address := viper.GetString(getAddress)
-	index := strings.LastIndex(httpsUrl, ":")
-	if index < 0 {
-		fmt.Println("url is not correct, example 'https://chain-01.dccn.ankr.com:443'")
-		return
-	}
-
-	balance, err := wallet.GetBalance(httpsUrl[:index], httpsUrl[index+1:], address)
+	client := newAnkrHttpClient(viper.GetString(getUrl))
+	req := new(common.BalanceQueryReq)
+	req.Address = viper.GetString(getAddress)
+	req.Symbol = viper.GetString(getSymbol)
+	balanceResp := new(common.BalanceQueryResp)
+	err := client.Query("/store/account", req, balanceResp)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	if len(balance) <= 18 {
-		balanceDecimalZero := make([]byte, 18-len(balance))
-		for i := 0; i < 18-len(balance); i++ {
-			balanceDecimalZero = append(balanceDecimalZero, '0')
-		}
-		balance = "0." + string(balanceDecimalZero) + balance
-	} else {
-		balance = balance[:len(balance)-18] + "." + balance[len(balance)-18:]
-	}
-	fmt.Printf("The balance is: %s\n", balance)
+	displayStruct(balanceResp)
 }
 
 func addExportFlags(cmd *cobra.Command) {
-	err := addStringFlag(cmd, exportKeystore, fileFlag, "f", "", "the path where keystore file is located.", required)
+	err := addStringFlag(cmd, exportKeystore, fileParam, "f", "", "the path where keystore file is located.", required)
 	if err != nil {
 		panic(err)
 	}
@@ -318,7 +294,6 @@ func resetPwd(cmd *cobra.Command, args []string) {
 
 	encryptedKeyJSONV3 := EncryptedKeyJSONV3{
 		Address:        acc.Address,
-		PublicKey:      acc.PublicKey,
 		Crypto:         cryptoStruct,
 		KeyJSONVersion: keyJSONVersion,
 	}
@@ -344,7 +319,7 @@ func resetPwd(cmd *cobra.Command, args []string) {
 }
 
 func addResetPWDFlags(cmd *cobra.Command){
-	err := addStringFlag(cmd, resetKeystore, fileFlag, "f", "", "the path where keystore file is located.", required)
+	err := addStringFlag(cmd, resetKeystore, fileParam, "f", "", "the path where keystore file is located.", required)
 	if err != nil {
 		panic(err)
 	}
@@ -372,3 +347,30 @@ InputPassword:
 	}
 	return password
 }
+
+
+func queryAccount(cmd *cobra.Command, args []string){
+	client := newAnkrHttpClient(viper.GetString(getUrl))
+	req := new(common.AccountQueryReq)
+	req.Addr = viper.GetString(getAccAddress)
+	resp := new(common.AccountQueryResp)
+	err := client.Query("/store/account", req, resp)
+	if err != nil {
+		fmt.Println("Query Account Failed.")
+		fmt.Println(err)
+		return
+	}
+	displayStruct(resp)
+}
+
+func addQueryAccountFlags(cmd *cobra.Command)  {
+	err := addStringFlag(cmd, getAccAddress, addressParam, "", "", "account address", required)
+	if err != nil {
+		panic(err)
+	}
+	err = addStringFlag(cmd, getAccUrl, urlParam, "a", "", "the address of an account.", required)
+	if err != nil {
+		panic(err)
+	}
+}
+

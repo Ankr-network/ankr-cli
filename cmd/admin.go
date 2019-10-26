@@ -18,8 +18,12 @@ package cmd
 import (
 	"fmt"
 	"math/big"
-	"strings"
-	"github.com/Ankr-network/dccn-common/wallet"
+	client2 "github.com/Ankr-network/ankr-chain/client"
+	"github.com/Ankr-network/ankr-chain/common"
+	"github.com/Ankr-network/ankr-chain/crypto"
+	"github.com/Ankr-network/ankr-chain/tx/metering"
+	"github.com/Ankr-network/ankr-chain/tx/serializer"
+	"github.com/Ankr-network/ankr-chain/tx/validator"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -30,7 +34,6 @@ var adminCmd = &cobra.Command{
 	Use:   "admin",
 	Short: "admin is used to do admin operations ",
 	Run: func(cmd *cobra.Command, args []string) {
-
 	},
 }
 
@@ -40,130 +43,107 @@ var (
 	//persistent flags
 	adminUrl        = "adminUrl"
 	adminPrivateKey = "adminPrivateKey"
+	adminChId = "adminChId"
+	adminGasLimt = "adminGasLimt"
+	adminGasPrice = "adminGasPrice"
+	adminMemo = "adminMemo"
+	adminVersion = "adminVersion"
+
 
 	//sub cmd flags
-	setBalAddr     = "setBalAddr"
-	setBalAmount   = "setBalAmount"
-	setCertDc      = "setCertDc"
-	setCertPerm    = "setCertPerm"
-	setValidPub    = "setValidPub"
-	setValidPower  = "setValidPower"
-	setStakeAmount = "setStakeAmount"
-	setStakePub    = "setStakePub"
-	removeValidPub = "removeValidPub"
-	removeCertDc   = "removeCertDc"
+	setBalAddr          = "setBalAddr"
+	setBalAmount        = "setBalAmount"
+	setCertDc           = "setCertDc"
+	setCertPerm         = "setCertPerm"
+	setValidPub         = "setValidPub"
+	setValidPower       = "setValidPower"
+	setValidAction      = "setValidAction"
+	setValidName        = "setValidName"
+	setValidStakeAddr   = "setValidStakeAddr"
+	setValidStakeAmount = "setValidStakeAmount"
+	setValidStakeHeight = "setValidStakeHeight"
+	setValidFlag        = "setValidFlag"
+	setValidGasUsed     = "setValidGasUsed"
+	setStakeAmount      = "setStakeAmount"
+	setStakePub         = "setStakePub"
+	removeValidPub      = "removeValidPub"
+	removeCertDc        = "removeCertDc"
+	removeCertNs = "removeCertNs"
 )
 
 func init() {
 	//init persistent flags and append sub commands
-	err := addPersistentString(adminCmd, adminUrl, urlFlag, "", "", "url of a validator", required)
+	err := addPersistentString(adminCmd, adminUrl, urlParam, "", "", "url of a validator", required)
 	if err != nil {
 		panic(err)
 	}
 
-	err = addPersistentString(adminCmd, adminPrivateKey, privkeyFlag, "", "", "operator private key", required)
+	err = addPersistentString(adminCmd, adminPrivateKey, privkeyParam, "", "", "operator private key", required)
+	if err != nil {
+		panic(err)
+	}
+	err = addPersistentString(adminCmd, adminChId, chainIDParam, "", "ankr-chain", "block chain id", notRequired)
+	if err != nil {
+		panic(err)
+	}
+	err = addPersistentInt(adminCmd, adminGasPrice, gasPriceParam, "", 0, "gas price", notRequired)
+	if err != nil {
+		panic(err)
+	}
+
+	err = addPersistentString(adminCmd, adminMemo, memoParam, "", "", "transaction memo", notRequired)
+	if err != nil {
+		panic(err)
+	}
+	err = addPersistentInt(adminCmd, adminGasLimt, gasLimitParam, "", 0, "gas limmit", notRequired)
+	if err != nil {
+		panic(err)
+	}
+
+	err = addPersistentString(adminCmd, adminVersion, versionParam, "", "1.0", "block chain net version", notRequired)
 	if err != nil {
 		panic(err)
 	}
 
 	//add sub cmd to adminCmd
-	appendSubCmd(adminCmd, "setbalance", "set target account with specified amount", setBalance, addSetBalanceFlag)
+	//appendSubCmd(adminCmd, "setbalance", "set target account with specified amount", setBalance, addSetBalanceFlag)
 	appendSubCmd(adminCmd, "setcert", "set metering cert", setCert, addCertFlags)
-	appendSubCmd(adminCmd, "setvalidator", "add a new validator", setValidator, addSetValidatorFlags)
-	appendSubCmd(adminCmd, "setstake", "set stake", setStake, addSetStakeFlags)
-	appendSubCmd(adminCmd, "removevalidator", "remove a validator", removeValidator, addRemoveValidatorFlags)
+	appendSubCmd(adminCmd, "validator", "add a new validator", setValidator, addSetValidatorFlags)
 	appendSubCmd(adminCmd, "removecert", "remove cert from validator", removeCert, addRemoveCertFlags)
-}
-
-//admin setbalance --address 0xXXX --amount 12313 --url https://validator-url:port
-func setBalance(cmd *cobra.Command, args []string) {
-	validatorUrl = viper.GetString(adminUrl)
-	if len(validatorUrl) < 1 {
-		fmt.Println("Illegal url is received!")
-		return
-	}
-	address := viper.GetString(setBalAddr)
-	amount := viper.GetString(setBalAmount)
-	operatorPriv := viper.GetString(adminPrivateKey)
-	index := strings.LastIndex(validatorUrl, ":")
-	if index < 0 {
-		fmt.Println("Error: url is not correct, example 'https://chain-01.dccn.ankr.com:443'")
-		return
-	}
-	err := wallet.SetBalance(validatorUrl[:index], validatorUrl[index+1:], address, amount, operatorPriv)
-	if err != nil {
-		fmt.Println("Error: Set balance failed.", err)
-		return
-	}
-	balance, err := wallet.GetBalance(validatorUrl[:index], validatorUrl[index+1:], address)
-	if err != nil {
-		fmt.Println("Error: Set balance failed", err)
-		return
-	}
-	if len(balance) <= 18 {
-		balanceDecimalZero := make([]byte, 18-len(balance))
-		for i := 0; i < 18-len(balance); i++ {
-			balanceDecimalZero = append(balanceDecimalZero, '0')
-		}
-		balance = "0." + string(balanceDecimalZero) + balance
-	} else {
-		balance = balance[:len(balance)-18] + "." + balance[len(balance)-18:]
-	}
-	fmt.Println("Set balance Success.")
-	fmt.Println("Address:", address)
-	fmt.Println("Balance:", balance)
-
-}
-
-func addSetBalanceFlag(cmd *cobra.Command) {
-	err := addStringFlag(cmd, setBalAddr, addressFlag, "", "", "the address of the target account to receive ankr token", required)
-	if err != nil {
-		panic(err)
-	}
-
-	err = addStringFlag(cmd, setBalAmount, amountFlag, "", "", "the amount to set to the target address", required)
-	if err != nil {
-		panic(err)
-	}
 }
 
 //admin setcert --dcname dataCenterName --certPerm certString --url https://validator-url:port
 func setCert(cmd *cobra.Command, args []string) {
-	validatorUrl = viper.GetString(adminUrl)
-	if len(validatorUrl) < 1 {
-		fmt.Println("Illegal url is received!")
-		return
-	}
-	index := strings.LastIndex(validatorUrl, ":")
-	if index < 0 {
-		fmt.Println("Error: url is not correct, example 'https://chain-01.dccn.ankr.com:443'")
-		return
-	}
+	client := newAnkrHttpClient(viper.GetString(adminUrl))
 	opPrivateKey := viper.GetString(adminPrivateKey)
 	if len(opPrivateKey) < 1 {
 		fmt.Println("Invalid operator private key!")
 		return
 	}
-	dcName := viper.GetString(setCertDc)
-	certPerm := viper.GetString(setCertPerm)
-	if len(certPerm) < 1 {
-		fmt.Println("Invalid cert perm!")
-		return
-	}
-	err := wallet.SetMeteringCert(validatorUrl[:index], validatorUrl[index+1:], opPrivateKey, dcName, certPerm)
+	txMsg := new(metering.SetCertMsg)
+	txMsg.DCName = viper.GetString(setCertDc)
+	txMsg.PemBase64 = viper.GetString(setCertPerm)
+	key := crypto.NewSecretKeyEd25519(viper.GetString(adminPrivateKey))
+	header := getAdminMsgHeader()
+	builder :=client2.NewTxMsgBuilder(*header, txMsg, serializer.NewTxSerializerCDC(), key)
+	txHash, cHeight, _, err := builder.BuildAndCommit(client)
 	if err != nil {
-		fmt.Println("Set metering cert failed", err)
+		fmt.Println("Set Cert failed.")
+		fmt.Println(err)
 		return
 	}
-	fmt.Println("Set cert success.")
+
+	fmt.Println("Set Cert success.")
+	fmt.Println("Transaction hash:",txHash)
+	fmt.Println("Block Height:", cHeight)
 }
 
 func addCertFlags(cmd *cobra.Command) {
-	err := addStringFlag(cmd, setCertDc, dcnameFlag, "", "", "data center name", required)
+	err := addStringFlag(cmd, setCertDc, dcnameParam, "", "", "data center name", required)
 	if err != nil {
 		panic(err)
 	}
-	err = addStringFlag(cmd, setCertPerm, permFlag, "", "", "cert perm to be set", required)
+	err = addStringFlag(cmd, setCertPerm, permParam, "", "", "cert perm to be set", required)
 	if err != nil {
 		panic(err)
 	}
@@ -171,176 +151,159 @@ func addCertFlags(cmd *cobra.Command) {
 
 // setvalidator --pubkey jlds --power 21 --url --privkey
 func setValidator(cmd *cobra.Command, args []string) {
-	validatorUrl = viper.GetString(adminUrl)
-	if len(validatorUrl) < 1 {
-		fmt.Println("Illegal url is received!")
-		return
-	}
-	index := strings.LastIndex(validatorUrl, ":")
-	if index < 0 {
-		fmt.Println("Error: url is not correct, example 'https://chain-01.dccn.ankr.com:443'")
-		return
-	}
 
-	validatorPub := viper.GetString(setValidPub)
-	if len(validatorPub) < 1 {
-		fmt.Println("Invalid validator public key!")
-		return
-	}
-
-	validatorPower := viper.GetString(setValidPower)
-	if len(validatorPower) < 1 {
-		fmt.Println("Invalid validator power!")
-		return
-	}
-
+	client := newAnkrHttpClient(viper.GetString(adminUrl))
 	opPrivateKey := viper.GetString(adminPrivateKey)
 	if len(opPrivateKey) < 1 {
 		fmt.Println("Invalid operator private key!")
 		return
 	}
-	err := wallet.SetValidator(validatorUrl[:index], validatorUrl[index+1:], validatorPub, validatorPower, opPrivateKey)
-	if err != nil {
-		fmt.Println("Set validator failed!", err)
+	header := getAdminMsgHeader()
+	validatorMsg := new(validator.ValidatorMsg)
+	validatorMsg.Name = viper.GetString(setValidName)
+	validatorMsg.Action = getAction(viper.GetString(setValidAction))
+	validatorMsg.StakeAddress = viper.GetString(setValidStakeAddr)
+	validatorMsg.StakeAmount.Cur = ankrCurrency
+	amount, ok := new(big.Int).SetString(viper.GetString(setValidStakeAmount), 10)
+	if !ok {
+		fmt.Println("Invalid amount.")
 		return
 	}
-	fmt.Println("Set validator success.")
+	validatorMsg.StakeAmount.Value = amount.Bytes()
+	validatorMsg.SetFlag = getFlagInfo(viper.GetString(setValidFlag))
+	validatorMsg.ValidHeight = uint64(viper.GetInt(setValidStakeHeight))
+	key := crypto.NewSecretKeyEd25519(opPrivateKey)
+	builder := client2.NewTxMsgBuilder(*header, validatorMsg,serializer.NewTxSerializerCDC(), key)
+	txHash, cHeight, _, err := builder.BuildAndCommit(client)
+	if err != nil {
+		fmt.Println("Set Validator failed.")
+		fmt.Println(err)
+		return
+	}
 
+	fmt.Println("Set Validator success.")
+	fmt.Println("Transaction hash:",txHash)
+	fmt.Println("Block Height:", cHeight)
+}
+
+func getFlagInfo(flag string) common.ValidatorInfoSetFlag {
+	switch flag {
+	case "set-name":
+		return common.ValidatorInfoSetName
+	case "set-val-addr":
+		return common.ValidatorInfoSetValAddress
+	case "set-pub":
+		return common.ValidatorInfoSetPubKey
+	case "set-stake-addr":
+		return common.ValidatorInfoSetStakeAddress
+	case "set-val-height":
+		return common.ValidatorInfoSetValidHeight
+	case "set-stake-amount":
+		return common.ValidatorInfoSetStakeAmount
+	}
+	return common.ValidatorInfoSetFlag(0)
 }
 
 func addSetValidatorFlags(cmd *cobra.Command) {
-	err := addStringFlag(cmd, setValidPub, pubkeyFlag, "", "", "the public address of the added validator", required)
+	err := addStringFlag(cmd, setValidPub, pubkeyParam, "", "", "the public address of the added validator", required)
 	if err != nil {
 		panic(err)
 	}
-
-	err = addStringFlag(cmd, setValidPower, powerFlag, "", "", "the power set to the validator", required)
+	//
+	//err = addStringFlag(cmd, setValidPower, powerParam, "", "", "the power set to the validator", required)
+	//if err != nil {
+	//	panic(err)
+	//}
+	err = addStringFlag(cmd, setValidAction, actionParam, "", "", "update validator action", required)
 	if err != nil {
 		panic(err)
 	}
-}
-
-// setstake --amount 3
-func setStake(cmd *cobra.Command, args []string) {
-	validatorUrl = viper.GetString(adminUrl)
-	if len(validatorUrl) < 1 {
-		fmt.Println("Illegal url is received!")
-		return
-	}
-	index := strings.LastIndex(validatorUrl, ":")
-	if index < 0 {
-		fmt.Println("Error: url is not correct, example 'https://chain-01.dccn.ankr.com:443'")
-		return
-	}
-	opPrivateKey := viper.GetString(adminPrivateKey)
-	if len(opPrivateKey) < 1 {
-		fmt.Println("Invalid operator private key!")
-		return
-	}
-
-	amount := viper.GetString(setStakeAmount)
-	_, ok := new(big.Int).SetString(amount, 10)
-	if !ok {
-		fmt.Println("Invalid Stake Amount!")
-		return
-	}
-	stakePub := viper.GetString(setStakePub)
-	if len(stakePub) < 1 {
-		fmt.Println("Invalid public key!")
-		return
-	}
-	err := wallet.SetStake(validatorUrl[:index], validatorUrl[index+1:], opPrivateKey, amount, stakePub)
-	if err != nil {
-		fmt.Println("Set stake failed.", err)
-		return
-	}
-	fmt.Println("Set Stake success.")
-}
-
-func addSetStakeFlags(cmd *cobra.Command) {
-	err := addStringFlag(cmd, setStakeAmount, amountFlag, "", "", "set stake amount", required)
+	err = addStringFlag(cmd, setValidName, nameParam, "", "", "update validator action", required)
 	if err != nil {
 		panic(err)
 	}
-
-	err = addStringFlag(cmd, setStakePub, pubkeyFlag, "", "", "public key", required)
+	err = addStringFlag(cmd, setValidFlag, flagParam, "", "", "flag of validator tansaction", notRequired)
+	if err != nil {
+		panic(err)
+	}
+	err = addStringFlag(cmd, setValidStakeAddr, addressParam, "", "", "validator stake address", notRequired)
+	if err != nil {
+		panic(err)
+	}
+	err = addStringFlag(cmd, setValidStakeAmount, amountParam, "", "", "validator stake amount", notRequired)
+	if err != nil {
+		panic(err)
+	}
+	err = addStringFlag(cmd, setValidGasUsed, gasUsedParam, "", "", "gas used", notRequired)
+	if err != nil {
+		panic(err)
+	}
+	err = addIntFlag(cmd, setValidStakeHeight, heightParam, "", 0, "validator stake height", notRequired)
 	if err != nil {
 		panic(err)
 	}
 }
 
-// removevalidator --pubkey string
-func removeValidator(cmd *cobra.Command, args []string) {
-	validatorUrl = viper.GetString(adminUrl)
-	if len(validatorUrl) < 1 {
-		fmt.Println("Illegal url is received!")
-		return
-	}
-	index := strings.LastIndex(validatorUrl, ":")
-	if index < 0 {
-		fmt.Println("Error: url is not correct, example 'https://chain-01.dccn.ankr.com:443'")
-		return
-	}
-	opPrivateKey := viper.GetString(adminPrivateKey)
-	if len(opPrivateKey) < 1 {
-		fmt.Println("Invalid operator private key!")
-		return
-	}
-
-	validatorPub := viper.GetString(removeValidPub)
-	if len(validatorPub) < 1 {
-		fmt.Println("Invalid validator public key!")
-		return
-	}
-
-	err := wallet.RemoveValidator(validatorUrl[:index], validatorUrl[index+1:], validatorPub, opPrivateKey)
-	if err != nil {
-		fmt.Println("Remove validator failed:", err)
-		return
-	}
-	fmt.Println("Remove validator success.")
-}
-
-func addRemoveValidatorFlags(cmd *cobra.Command) {
-	err := addStringFlag(cmd, removeValidPub, pubkeyFlag, "", "", "public key of the to be removed validator", required)
-	if err != nil {
-		panic(err)
+func getAction(action string) uint8 {
+	switch action {
+	case "create":
+		return 1
+	case "update":
+		return 2
+	case "remove":
+		return 3
+	default:
+		return 0
 	}
 }
 
 // removecert --pubkey string
 func removeCert(cmd *cobra.Command, args []string) {
 	validatorUrl = viper.GetString(adminUrl)
-	if len(validatorUrl) < 1 {
-		fmt.Println("Illegal url is received!")
-		return
-	}
-	index := strings.LastIndex(validatorUrl, ":")
-	if index < 0 {
-		fmt.Println("Error: url is not correct, example 'https://chain-01.dccn.ankr.com:443'")
-		return
-	}
-	opPrivateKey := viper.GetString(adminPrivateKey)
-	if len(opPrivateKey) < 1 {
-		fmt.Println("Invalid operator private key!")
-		return
-	}
-	removeDcName := viper.GetString(removeCertDc)
-	if len(removeCertDc) < 1 {
-		fmt.Println("Invalid data center name!")
-		return
-	}
-	err := wallet.RemoveMeteringCert(validatorUrl[:index], validatorUrl[index+1:], opPrivateKey, removeDcName)
+	client := newAnkrHttpClient(viper.GetString(adminUrl))
+	amdinPriv := viper.GetString(adminPrivateKey)
+	header := getAdminMsgHeader()
+	txMsg := new(metering.RemoveCertMsg)
+	txMsg.DCName = viper.GetString(removeCertDc)
+	txMsg.NSName = viper.GetString(removeCertNs)
+	key := crypto.NewSecretKeyEd25519(amdinPriv)
+	builder := client2.NewTxMsgBuilder(*header, txMsg, serializer.NewTxSerializerCDC(), key)
+	txHash, cHeight, _, err := builder.BuildAndCommit(client)
 	if err != nil {
-		fmt.Println("Failed to remove cert:", err)
+		fmt.Println("Remove cert failed.")
+		fmt.Println(err)
 		return
 	}
+
 	fmt.Println("Remove cert success.")
+	fmt.Println("Transaction hash:",txHash)
+	fmt.Println("Block Height:", cHeight)
+
 }
 
 func addRemoveCertFlags(cmd *cobra.Command) {
-	err := addStringFlag(cmd, removeCertDc, dcnameFlag, "", "", "name of data center name", required)
+	err := addStringFlag(cmd, removeCertDc, dcnameParam, "", "", "name of data center name", required)
 	if err != nil {
 		panic(err)
 	}
+	err = addStringFlag(cmd, removeCertNs, nameSpaceParam, "", "", "name space", required)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// get transaction header .
+func getAdminMsgHeader() *client2.TxMsgHeader {
+	chainId := viper.GetString(transferChainId)
+	gasLimit := viper.GetInt(transferGasLimit)
+	gasPrice := viper.GetInt(transferGasPrice)
+
+	header := new(client2.TxMsgHeader)
+	header.Memo = viper.GetString(adminMemo)
+	header.Version = viper.GetString(adminVersion)
+	header.GasLimit = new(big.Int).SetUint64(uint64(gasLimit)).Bytes()
+	header.GasPrice.Cur = ankrCurrency
+	header.GasPrice.Value = new(big.Int).SetUint64(uint64(gasPrice)).Bytes()
+	header.ChID = common.ChainID(chainId)
+	return header
 }
