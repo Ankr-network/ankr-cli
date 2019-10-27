@@ -105,6 +105,7 @@ func init() {
 	appendSubCmd(queryCmd, "unconfirmedtxs", "Get unconfirmed transactions (maximum ?limit entries) including their number",
 		queryUnconfirmedTxs, addQueryUncofirmedTxsFlags)
 	appendSubCmd(queryCmd, "numunconfirmedtxs","Get number of unconfirmed transactions.", queryNumUnconfiredTxs, nil)
+	appendSubCmd(queryCmd, "contract", "get smart contract data", runGetContract, addGetContractFlags)
 }
 
 func transactionInfo(cmd *cobra.Command, args []string)  {
