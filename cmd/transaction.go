@@ -230,14 +230,21 @@ func runDeploy(cmd *cobra.Command, args []string){
 		fmt.Println("Error: Wrong keystore or password!")
 		return
 	}
-	acc, _ := getAccountFromPrivatekey(privateKey)
+	//acc, _ := getAccountFromPrivatekey(privateKey)
 	
 	contractMsg := new(contract.ContractDeployMsg)
 	contractMsg.Name = viper.GetString(deployContractName)
-	contractMsg.FromAddr = acc.Address
+	//contractMsg.FromAddr = acc.Address
 	contractMsg.Codes = wasmBin
 	contractMsg.CodesDesc = viper.GetString(abiParam)
 	key := crypto.NewSecretKeyEd25519(privKey)
+	keyAddr, err := key.Address()
+	if err != nil {
+	    fmt.Println("Error: Wrong Privekey!")
+		fmt.Println(err)
+		return
+	}
+	contractMsg.FromAddr = string(keyAddr)
 	builder := client2.NewTxMsgBuilder(*header, contractMsg, serializer.NewTxSerializerCDC(), key)
 	txHash, cHeight, contractAddr, err := builder.BuildAndCommit(client)
 	if err != nil {
