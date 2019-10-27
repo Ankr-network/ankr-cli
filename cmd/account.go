@@ -211,7 +211,7 @@ func getBalance(cmd *cobra.Command, args []string) {
 	req.Address = viper.GetString(getAddress)
 	req.Symbol = viper.GetString(getSymbol)
 	balanceResp := new(common.BalanceQueryResp)
-	err := client.Query("/store/account", req, balanceResp)
+	err := client.Query("/store/balance", req, balanceResp)
 	if err != nil {
 		fmt.Println(err)
 		return

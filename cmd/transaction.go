@@ -230,8 +230,11 @@ func runDeploy(cmd *cobra.Command, args []string){
 		fmt.Println("Error: Wrong keystore or password!")
 		return
 	}
+	acc, _ := getAccountFromPrivatekey(privateKey)
+	
 	contractMsg := new(contract.ContractDeployMsg)
 	contractMsg.Name = viper.GetString(deployContractName)
+	contractMsg.FromAddr = acc.Address
 	contractMsg.Codes = wasmBin
 	contractMsg.CodesDesc = viper.GetString(abiParam)
 	key := crypto.NewSecretKeyEd25519(privKey)
