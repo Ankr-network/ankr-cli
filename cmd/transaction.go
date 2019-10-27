@@ -244,7 +244,7 @@ func runDeploy(cmd *cobra.Command, args []string){
 		fmt.Println(err)
 		return
 	}
-	contractMsg.FromAddr = string(keyAddr)
+	contractMsg.FromAddr = fmt.Sprintf("%X", keyAddr)
 	builder := client2.NewTxMsgBuilder(*header, contractMsg, serializer.NewTxSerializerCDC(), key)
 	txHash, cHeight, contractAddr, err := builder.BuildAndCommit(client)
 	if err != nil {
