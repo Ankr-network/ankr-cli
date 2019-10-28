@@ -138,6 +138,8 @@ func transfer(cmd *cobra.Command, args []string) {
 
 	//transaction builder
 	key := crypto.NewSecretKeyEd25519(acc.PrivateKey)
+	keyAddr, _ := key.Address()
+	transferMsg.FromAddr = fmt.Sprintf("%X", keyAddr)
 	builder := client2.NewTxMsgBuilder(*txMsgheader, transferMsg, serializer.NewTxSerializerCDC(), key)
 	txHash, txHeight, _, err := builder.BuildAndCommit(client)
 	if err != nil {
@@ -309,6 +311,8 @@ func runInvoke(cmd *cobra.Command, args []string)  {
 	invokeMsg.ContractAddr = viper.GetString(invokeAddr)
 	invokeMsg.RtnType = viper.GetString(invokeReturn)
 	key := crypto.NewSecretKeyEd25519(privKey)
+	keyAddr, _ := key.Address()
+	invokeMsg.FromAddr = fmt.Sprintf("%X",keyAddr)
 	builder := client2.NewTxMsgBuilder(*header, invokeMsg, serializer.NewTxSerializerCDC(), key)
 	txHash, cHeight, contractResultJson, err := builder.BuildAndCommit(client)
 	if err != nil {

@@ -124,6 +124,8 @@ func setCert(cmd *cobra.Command, args []string) {
 	txMsg.DCName = viper.GetString(setCertDc)
 	txMsg.PemBase64 = viper.GetString(setCertPerm)
 	key := crypto.NewSecretKeyEd25519(viper.GetString(adminPrivateKey))
+	keyAddr, _ := key.Address()
+	txMsg.FromAddr = fmt.Sprintf("%X", keyAddr)
 	header := getAdminMsgHeader()
 	builder :=client2.NewTxMsgBuilder(*header, txMsg, serializer.NewTxSerializerCDC(), key)
 	txHash, cHeight, _, err := builder.BuildAndCommit(client)
@@ -173,6 +175,8 @@ func setValidator(cmd *cobra.Command, args []string) {
 	validatorMsg.SetFlag = getFlagInfo(viper.GetString(setValidFlag))
 	validatorMsg.ValidHeight = uint64(viper.GetInt(setValidStakeHeight))
 	key := crypto.NewSecretKeyEd25519(opPrivateKey)
+	keyAddr, _ := key.Address()
+	validatorMsg.FromAddress = fmt.Sprintf("%X", keyAddr)
 	builder := client2.NewTxMsgBuilder(*header, validatorMsg,serializer.NewTxSerializerCDC(), key)
 	txHash, cHeight, _, err := builder.BuildAndCommit(client)
 	if err != nil {
@@ -267,6 +271,8 @@ func removeCert(cmd *cobra.Command, args []string) {
 	txMsg.DCName = viper.GetString(removeCertDc)
 	txMsg.NSName = viper.GetString(removeCertNs)
 	key := crypto.NewSecretKeyEd25519(amdinPriv)
+	keyAddr, _ := key.Address()
+	txMsg.FromAddr = fmt.Sprintf("%X", keyAddr)
 	builder := client2.NewTxMsgBuilder(*header, txMsg, serializer.NewTxSerializerCDC(), key)
 	txHash, cHeight, _, err := builder.BuildAndCommit(client)
 	if err != nil {
@@ -294,9 +300,9 @@ func addRemoveCertFlags(cmd *cobra.Command) {
 
 // get transaction header .
 func getAdminMsgHeader() *client2.TxMsgHeader {
-	chainId := viper.GetString(transferChainId)
-	gasLimit := viper.GetInt(transferGasLimit)
-	gasPrice := viper.GetInt(transferGasPrice)
+	chainId := viper.GetString(adminChId)
+	gasLimit := viper.GetInt(adminGasLimt)
+	gasPrice := viper.GetInt(adminGasPrice)
 
 	header := new(client2.TxMsgHeader)
 	header.Memo = viper.GetString(adminMemo)
