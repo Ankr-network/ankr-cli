@@ -34,7 +34,7 @@ var (
 	meteringValue   = "meteringValue"
 	meteringPriv    = "meteringPriv"
 	transferVersion = "transferVersion"
-	transferSymbol = "transferSymbol"
+	transferSymbol = "ANKR"
 	deployPriv = "deployPriv"
 	deployContractName = "deployContractName"
 	deployBin = "deployBin"
@@ -94,10 +94,11 @@ func init() {
 
 //transaction transfer functions
 func transfer(cmd *cobra.Command, args []string) {
+	if len(args) > 1 {
+		fmt.Println("Too much arguments received.")
+		return
+	}
 	keystorePath := viper.GetString(transferKeyfile)
-	//for i, arg := range args {
-	//	fmt.Println("arg", i, ":", arg)
-	//}
 	_, err := os.Stat(keystorePath)
 	if err != nil {
 		fmt.Println("Error: Keystore does not exist!")
@@ -118,10 +119,12 @@ func transfer(cmd *cobra.Command, args []string) {
 	client := newAnkrHttpClient(validatorUrl)
 
 	//gather inputs
-	symbol := viper.GetString(transferSymbol)
+	if len(args) != 0 {
+		transferSymbol = args[0]
+	}
 	amount := viper.GetInt(transferAmount)
 	currency := new(common.Currency)
-	currency.Symbol = symbol
+	currency.Symbol = transferSymbol
 	txAmount := common.Amount{*currency, new(big.Int).SetUint64(uint64(amount)).Bytes()}
 
 	//transaction msg header
@@ -137,6 +140,11 @@ func transfer(cmd *cobra.Command, args []string) {
 	key := crypto.NewSecretKeyEd25519(acc.PrivateKey)
 	builder := client2.NewTxMsgBuilder(*txMsgheader, transferMsg, serializer.NewTxSerializerCDC(), key)
 	txHash, txHeight, _, err := builder.BuildAndCommit(client)
+	if err != nil {
+		fmt.Println("Transaction commit failed.")
+		fmt.Println(err)
+		return
+	}
 	fmt.Println("\nTransaction commit successful.")
 	fmt.Println("Transaction hash", txHash)
 	fmt.Println("Transaction height", txHeight)
@@ -155,10 +163,10 @@ func addTransferFlag(cmd *cobra.Command) {
 	if err != nil {
 		panic(err)
 	}
-	err = addStringFlag(cmd, transferSymbol, symbolParam, "", "ANKR","transaction symbol", notRequired)
-	if err != nil {
-		panic(err)
-	}
+	//err = addStringFlag(cmd, transferSymbol, symbolParam, "", "ANKR","transaction symbol", notRequired)
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 
 //transaction metering function
@@ -188,6 +196,11 @@ func sendMetering(cmd *cobra.Command, args []string) {
 
 	builder := client2.NewTxMsgBuilder(*txMsgheader, meteringMsg, serializer.NewTxSerializerCDC(), key)
 	txHash, cHeight, _, err := builder.BuildAndCommit(client)
+	if err != nil {
+		fmt.Println("Send CertMsg failed.")
+		fmt.Println(err)
+		return
+	}
 	fmt.Println("Send CertMsg successful.")
 	fmt.Println("transaction hash:", txHash)
 	fmt.Println("transaction height:", cHeight)
@@ -334,7 +347,7 @@ func addInvokeFlags(cmd *cobra.Command)  {
 }
 
 func runGetContract(cmd *cobra.Command, args []string)  {
-	client := newAnkrHttpClient(viper.GetString(transferUrl))
+	client := newAnkrHttpClient(viper.GetString(queryUrl))
 	resp := new(common.ContractQueryResp)
 	req := new(common.ContractQueryReq)
 	req.Address = viper.GetString(getContractAddr)
